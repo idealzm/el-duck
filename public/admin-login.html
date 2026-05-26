@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <title>EL-DUCK Admin - Вход</title>
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico?v=20260417-1" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png?v=20260417-1" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png?v=20260417-1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png?v=20260417-1" />
+    <link rel="stylesheet" href="/admin.css?v=20260417-2">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <img src="/assets/brand/logo.svg?v=2" alt="EL-DUCK" class="login-logo" />
+            <h1 class="login-title">Вход в админ-панель</h1>
+            <p class="login-subtitle">Введите email и пароль администратора</p>
+
+            <form id="loginForm" class="login-form">
+                <div class="login-input-group">
+                    <input type="email" id="email" name="email" placeholder="admin@example.com" required autocomplete="username" />
+                </div>
+                <div class="login-input-group">
+                    <input type="password" id="password" name="password" placeholder="Пароль" required autocomplete="current-password" />
+                </div>
+                <button type="submit" class="btn-primary btn-full" id="loginBtn">
+                    <span class="btn-text">Войти</span>
+                    <span class="btn-loader hidden">⏳</span>
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/admin-login.js?v=20260417-1"></script>
+</body>
+</html>

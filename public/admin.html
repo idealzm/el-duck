@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <title>El-Duck Admin</title>
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico?v=20260417-1" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png?v=20260417-1" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png?v=20260417-1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png?v=20260417-1" />
+    <link rel="stylesheet" href="admin.css?v=20260526-14">
+</head>
+<body class="admin-auth-pending">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="/assets/brand/logo.svg" alt="El-Duck" class="sidebar-logo" />
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Меню">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-page="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span>Дашборд</span>
+                </button>
+                <button class="nav-item" data-page="users">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>Пользователи</span>
+                </button>
+                <button class="nav-item" data-page="payments">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                    </svg>
+                    <span>Платежи</span>
+                </button>
+                <button class="nav-item" data-page="support">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                    </svg>
+                    <span>Поддержка</span>
+                </button>
+                <button class="nav-item" data-page="settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Настройки</span>
+                </button>
+                <button class="nav-item" data-page="promocodes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><path d="M12 2v12"/><path d="M7 7h10"/>
+                    </svg>
+                    <span>Маркетинг</span>
+                </button>
+                <button class="nav-item" data-page="groups">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>Группы</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="adminLogout">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                    </svg>
+                    <span>Выйти</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Открыть меню">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <h1 class="page-title" id="pageTitle">Дашборд</h1>
+                <div class="header-actions">
+                    <button class="refresh-btn" id="refreshData" title="Обновить">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                    </button>
+                    <div class="admin-profile">
+                        <span class="admin-name">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div class="page active" id="page-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon users">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statTotalUsers">0</span>
+                            <span class="stat-label">Пользователей</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon active">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statActiveSubs">0</span>
+                            <span class="stat-label">Активных подписок</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon revenue">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statRevenue">0 ₽</span>
+                            <span class="stat-label">Доход за месяц</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon balance">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statTotalBalance">0 ₽</span>
+                            <span class="stat-label">Балансы пользователей</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card recent-users">
+                        <div class="card-header">
+                            <h3>Последние пользователи</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="data-table" id="recentUsersTable">
+                                <colgroup>
+                                    <col class="col-40">
+                                    <col class="col-20">
+                                    <col class="col-20">
+                                    <col class="col-20">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Баланс</th>
+                                        <th>Подписка</th>
+                                        <th>Дата</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card subscription-stats">
+                        <div class="card-header">
+                            <h3>Подписки</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="subscription-breakdown">
+                                <div class="sub-item">
+                                    <span class="sub-label">VPN</span>
+                                    <span class="sub-value" id="subVpn">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div class="page" id="page-users">
+                <div class="page-controls">
+                    <div class="search-box">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="userSearch" placeholder="Поиск по email..." />
+                    </div>
+                    <div class="filter-group">
+                        <select id="userFilter">
+                            <option value="all">Все пользователи</option>
+                            <option value="active">С подпиской</option>
+                            <option value="inactive">Без подписки</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-primary btn-sm" id="openGroupCreateModal">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Создать группу
+                    </button>
+                </div>
+
+                <div class="bulk-toolbar" id="usersBulkToolbar">
+                    <div class="bulk-toolbar-info" id="usersBulkInfo">Выберите пользователей</div>
+                    <div class="bulk-toolbar-actions">
+                        <button type="button" class="action-btn" id="bulkBalanceBtn" disabled>Изменить баланс</button>
+                        <button type="button" class="action-btn" id="bulkSubscriptionBtn" disabled>Изменить подписку</button>
+                        <button type="button" class="action-btn" id="bulkClearBtn" disabled>Сбросить</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <table class="data-table users-table" id="usersTable">
+                            <colgroup>
+                                <col class="col-5">
+                                <col class="col-10">
+                                <col class="col-24">
+                                <col class="col-10">
+                                <col class="col-10">
+                                <col class="col-14">
+                                <col class="col-8">
+                                <col class="col-14">
+                                <col class="col-5">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAllUsers" aria-label="Выбрать всех" /></th>
+                                    <th>ID</th>
+                                    <th>Email</th>
+                                    <th>Баланс</th>
+                                    <th>Подписка</th>
+                                    <th>Действ. до</th>
+                                    <th>Дней</th>
+                                    <th>Дата рег.</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments Page -->
+            <div class="page" id="page-payments">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="data-table" id="paymentsTable">
+                            <colgroup>
+                                <col class="col-7">
+                                <col class="col-33">
+                                <col class="col-15">
+                                <col class="col-15">
+                                <col class="col-30">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Пользователь</th>
+                                    <th>Сумма</th>
+                                    <th>Статус</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-support">
+                <div class="support-admin-layout">
+                    <div class="card support-admin-list-card">
+                        <div class="card-header">
+                            <h3>Обращения</h3>
+                            <select id="supportStatusFilter">
+                                <option value="">Все</option>
+                                <option value="open">Открытые</option>
+                                <option value="pending">Ожидают пользователя</option>
+                                <option value="closed">Закрытые</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div id="supportTicketsList" class="support-tickets-list"></div>
+                        </div>
+                    </div>
+                    <div class="card support-admin-chat-card">
+                        <div class="card-header support-admin-chat-head">
+                            <div>
+                                <h3 id="adminSupportTitle">Выберите обращение</h3>
+                                <p id="adminSupportMeta" class="support-admin-meta">—</p>
+                            </div>
+                            <button id="adminSupportCloseBtn" class="action-btn delete hidden" type="button">Закрыть</button>
+                        </div>
+                        <div class="card-body support-admin-chat-body">
+                            <div id="adminSupportMessages" class="support-admin-messages"></div>
+                            <form id="adminSupportMessageForm" class="support-admin-message-form">
+                                <textarea id="adminSupportMessageInput" placeholder="Ответ пользователю" maxlength="5000" required></textarea>
+                                <button class="btn-primary" type="submit">Отправить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page" id="page-settings">
+                <div class="settings-columns">
+                    <div class="settings-column">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Цены на подписки</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="pricesForm" class="settings-form">
+                                    <div class="form-group">
+                                        <label for="vpnPrice">VPN (₽/день)</label>
+                                        <input type="number" id="vpnPrice" name="vpnPrice" min="0" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="minTopUp">Мин. пополнение (₽)</label>
+                                        <input type="number" id="minTopUp" name="minTopUp" min="0" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="maxTopUp">Макс. пополнение (₽)</label>
+                                        <input type="number" id="maxTopUp" name="maxTopUp" min="0" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="defaultUserTemplateId">Шаблон PasarGuard по умолчанию</label>
+                                        <select id="defaultUserTemplateId" name="defaultUserTemplateId">
+                                            <option value="">Не выбран</option>
+                                        </select>
+                                        <div class="pasarguard-templates-actions">
+                                            <button type="button" class="btn-secondary" id="refreshPasarguardTemplatesBtn">Обновить шаблоны</button>
+                                            <span id="pasarguardTemplatesHint" class="text-hint">Загрузка...</span>
+                                        </div>
+                                    </div>
+                                    <div class="settings-form-actions">
+                                        <button type="submit" class="btn-primary btn-full">Сохранить</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Уведомления</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="notificationForm" class="settings-form settings-form-single">
+                                    <div class="form-group">
+                                        <label for="notifTitle">Заголовок</label>
+                                        <input type="text" id="notifTitle" placeholder="El-Duck VPN" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="notifTargetType">Кому отправить</label>
+                                        <select id="notifTargetType">
+                                            <option value="all">Всем пользователям</option>
+                                            <option value="selected">Выбранным пользователям</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group hidden" id="notifUsersGroup">
+                                        <label>Получатели</label>
+                                        <div class="user-multiselect" id="notifUsersSelect">
+                                            <button type="button" class="user-multiselect-toggle" id="notifUsersToggle">Выберите пользователей</button>
+                                            <div class="user-multiselect-menu" id="notifUsersMenu">
+                                                <div class="user-multiselect-list" id="notifUsersList"></div>
+                                            </div>
+                                        </div>
+                                        <textarea id="notifUserIds" class="hidden"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="notifBody">Текст</label>
+                                        <textarea id="notifBody" class="textarea-tall" placeholder="Ваш баланс скоро закончится..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn-primary" id="notifSendBtn">Отправить</button>
+                                </form>
+                                <div id="notifResult" class="result-msg hidden"></div>
+                                <div class="info-list info-list-with-margin">
+                                    <div class="info-item">
+                                        <span class="info-label">Подписчиков</span>
+                                        <span class="info-value" id="notifSubscribers">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-column">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Администраторы</h3>
+                            </div>
+                            <div class="card-body">
+                                <table class="data-table" id="adminsTable">
+                                    <colgroup>
+                                        <col class="col-30">
+                                        <col class="col-40">
+                                        <col class="col-20">
+                                        <col class="col-10">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>Никнейм</th>
+                                            <th>Email</th>
+                                            <th>Статус</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                                <button type="button" class="btn-primary btn-full-mt" id="openAdminCreateModal">+ Создать администратора</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Page -->
+            <div class="page" id="page-groups">
+                <div class="marketing-layout">
+                    <div class="marketing-col">
+                        <div class="card">
+                            <div class="card-header"><h3>Группы пользователей</h3></div>
+                            <div class="card-body">
+                                <form id="groupCreateForm" class="settings-form settings-form-single">
+                                    <div class="form-group">
+                                        <label for="groupName">Название группы</label>
+                                        <input type="text" id="groupName" maxlength="50" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="groupColor">Цвет</label>
+                                        <input type="color" id="groupColor" value="#888888" />
+                                    </div>
+                                    <div class="settings-form-actions">
+                                        <button type="submit" class="btn-primary btn-full">Создать группу</button>
+                                    </div>
+                                </form>
+                                <table class="data-table" id="groupsTable">
+                                    <colgroup>
+                                        <col class="col-10">
+                                        <col class="col-35">
+                                        <col class="col-20">
+                                        <col class="col-15">
+                                        <col class="col-20">
+                                    </colgroup>
+                                    <thead><tr><th>ID</th><th>Название</th><th>Цвет</th><th>Участников</th><th></th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing Page -->
+            <div class="page" id="page-billing">
+                <div class="billing-controls">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="billing-actions">
+                                <button id="runBillingBtn" class="btn-primary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                    Запустить биллинг
+                                </button>
+                                <button id="refreshBillingBtn" class="btn-secondary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 4v6h-6M1 20v-6h6"/>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                    </svg>
+                                    Обновить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="billingResult" class="billing-result hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Результат последнего запуска</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="result-stats">
+                                <div class="result-stat">
+                                    <span class="result-stat-label">Обработано</span>
+                                    <span class="result-stat-value" id="billingProcessed">0</span>
+                                </div>
+                                <div class="result-stat success">
+                                    <span class="result-stat-label">Успешно</span>
+                                    <span class="result-stat-value" id="billingSuccess">0</span>
+                                </div>
+                                <div class="result-stat error">
+                                    <span class="result-stat-label">Ошибки</span>
+                                    <span class="result-stat-value" id="billingFailed">0</span>
+                                </div>
+                                <div class="result-stat warning">
+                                    <span class="result-stat-label">Отменено</span>
+                                    <span class="result-stat-value" id="billingSuspended">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Ежедневные подписки</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table billing-table" id="billingTable">
+                            <colgroup>
+                                <col class="col-5">
+                                <col class="col-24">
+                                <col class="col-10">
+                                <col class="col-9">
+                                <col class="col-13">
+                                <col class="col-13">
+                                <col class="col-14">
+                                <col class="col-12">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Email</th>
+                                    <th>Статус</th>
+                                    <th>₽/день</th>
+                                    <th>Первый пл.</th>
+                                    <th>Последний</th>
+                                    <th>Следующий</th>
+                                    <th>Действ. до</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promo Codes Page -->
+            <div class="page" id="page-promocodes">
+                <div class="marketing-layout">
+                    <!-- Left Column: Referral -->
+                    <div class="marketing-col">
+                        <div class="card">
+                            <div class="card-header"><h3>Настройки реферальной программы</h3></div>
+                            <div class="card-body">
+                                <form id="referralSettingsForm" class="referral-settings-grid">
+                                    <div class="form-group">
+                                        <label class="checkbox-field"><input type="checkbox" id="refEnabled" /><span class="checkbox-mark" aria-hidden="true"></span> Реферальная программа активна</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="refMinTopup">Мин. пополнение для бонуса</label>
+                                        <input type="number" id="refMinTopup" min="0" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="refInviterBonus">Бонус пригласившему (₽)</label>
+                                        <input type="number" id="refInviterBonus" min="0" step="0.01" placeholder="Например, 50" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="refInviteeBonus">Бонус приглашённому (₽)</label>
+                                        <input type="number" id="refInviteeBonus" min="0" step="0.01" placeholder="Например, 30" />
+                                    </div>
+                                    <div class="referral-form-actions">
+                                        <button type="submit" class="btn-primary btn-full">Сохранить</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Пользователи — реферальная статистика</h3></div>
+                            <div class="card-body">
+                                <table class="data-table" id="referralUsersTable">
+                                    <colgroup>
+                                        <col class="col-35">
+                                        <col class="col-18">
+                                        <col class="col-15">
+                                        <col class="col-15">
+                                        <col class="col-17">
+                                    </colgroup>
+                                    <thead><tr><th>Email</th><th>Реф. код</th><th>Приглашено</th><th>Заработано (₽)</th><th>Получено (₽)</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Promo Codes -->
+                    <div class="marketing-col">
+                        <div class="card">
+                            <div class="card-header"><h3>Создать промокод</h3></div>
+                            <div class="card-body">
+                                <form id="promoCreateForm" class="promo-create-form">
+                                    <div class="form-group"><label for="promoCode">Код</label><input id="promoCode" type="text" maxlength="32" required /></div>
+                                    <div class="form-group"><label for="promoRewardValue">Бонус (₽)</label><input id="promoRewardValue" type="number" min="0.01" step="0.01" required /></div>
+                                    <div class="form-group"><label for="promoMinTopup">Мин. сумма пополнения</label><input id="promoMinTopup" type="number" min="0" step="0.01" value="0" /></div>
+                                    <div class="form-group promo-checkboxes-row"><label for="promoInstantGrant" class="checkbox-field"><input id="promoInstantGrant" type="checkbox" /><span class="checkbox-mark" aria-hidden="true"></span> Мгновенно начислять на баланс (без пополнения)</label><label for="promoIsActive" class="checkbox-field"><input id="promoIsActive" type="checkbox" checked /><span class="checkbox-mark" aria-hidden="true"></span> Активен</label></div>
+                                    <div class="promo-form-actions">
+                                        <button type="submit" class="btn-primary btn-full">Создать промокод</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Список промокодов</h3></div>
+                            <div class="card-body">
+                                <table class="data-table" id="promoCodesTable">
+                                    <colgroup>
+                                        <col class="col-7">
+                                        <col class="col-25">
+                                        <col class="col-20">
+                                        <col class="col-14">
+                                        <col class="col-9">
+                                        <col class="col-15">
+                                        <col class="col-10">
+                                    </colgroup>
+                                    <thead><tr><th>ID</th><th>Код</th><th>Режим</th><th>Бонус</th><th>Исп.</th><th>Статус</th><th></th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Balance Edit -->
+    <div class="modal" id="balanceModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Изменение баланса</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="balanceForm" class="modal-form">
+                        <input type="hidden" id="balanceUserId" />
+                        <div class="balance-grid-row">
+                            <label for="balanceUserEmail">Пользователь</label>
+                            <input type="text" id="balanceUserEmail" disabled />
+                        </div>
+                        <div class="balance-grid-row">
+                            <label for="balanceCurrent">Текущий баланс</label>
+                            <input type="text" id="balanceCurrent" disabled />
+                        </div>
+                        <div class="balance-grid-row">
+                            <label for="balanceChange">Сумма</label>
+                            <input type="number" id="balanceChange" placeholder="Например: 100" step="0.01" min="0.01" required />
+                        </div>
+                        <div class="balance-grid-row">
+                            <label for="balanceMessage">Сообщение пользователю (необязательно)</label>
+                            <textarea id="balanceMessage" placeholder="Например: Корректировка по заявке #124" rows="3"></textarea>
+                        </div>
+                        <div class="balance-action-row" id="balanceActionRow">
+                            <button type="button" class="action-btn" data-balance-action="add">Пополнить</button>
+                            <button type="button" class="action-btn" data-balance-action="subtract">Списать</button>
+                            <button type="button" class="action-btn" data-balance-action="set">Установить баланс</button>
+                        </div>
+                        <div class="balance-hint" id="balanceHint">Сумма применяется ко всем выбранным пользователям.</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Subscription Edit -->
+    <div class="modal" id="subscriptionModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Управление подпиской</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="subscriptionForm" class="modal-form">
+                        <input type="hidden" id="subUserId" />
+                        <div class="balance-grid-row">
+                            <label for="subUserEmail">Пользователь</label>
+                            <input type="text" id="subUserEmail" disabled />
+                        </div>
+                        <div class="balance-grid-row">
+                            <label for="subCurrent">Текущая подписка</label>
+                            <input type="text" id="subCurrent" disabled />
+                        </div>
+                        <div class="balance-grid-row">
+                            <label for="subMessage">Сообщение пользователю (необязательно)</label>
+                            <textarea id="subMessage" placeholder="Например: Подписка обновлена по вашему обращению" rows="3"></textarea>
+                        </div>
+                        <div class="balance-action-row" id="subscriptionActionRow">
+                            <button type="button" class="action-btn" data-sub-action="active">Активировать</button>
+                            <button type="button" class="action-btn" data-sub-action="none">Деактивировать</button>
+                            <div id="subscriptionResumeActions" class="subscription-resume-actions"></div>
+                        </div>
+                        <select id="subPlan" class="hidden" required>
+                            <option value="none">Неактивна</option>
+                            <option value="active">Активна</option>
+                        </select>
+                        <div id="subscriptionWarning" class="hidden"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Billing Result -->
+    <div class="modal" id="billingResultModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Результат биллинга</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="billing-result-modal-content">
+                        <p class="billing-result-modal-label"><strong>Пользователь:</strong> <span id="billingResultEmail"></span></p>
+                        <div class="billing-result-stats-inline">
+                            <div class="billing-result-stat-inline">
+                                <div class="stat-num-default" id="billingResultProcessed">0</div>
+                                <div class="text-muted">Обработано</div>
+                            </div>
+                            <div class="billing-result-stat-inline">
+                                <div class="stat-num-success" id="billingResultSuccess">0</div>
+                                <div class="text-muted">Успешно</div>
+                            </div>
+                            <div class="billing-result-stat-inline">
+                                <div class="stat-num-danger" id="billingResultFailed">0</div>
+                                <div class="text-muted">Ошибки</div>
+                            </div>
+                            <div class="billing-result-stat-inline">
+                                <div class="stat-num-muted" id="billingResultSuspended">0</div>
+                                <div class="text-muted">Приостановлено</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="billingResultDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Subscription Test -->
+    <div class="modal" id="subscriptionTestModal">
+        <div class="modal-dialog modal-dialog-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Тест подписки</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="testUserId" />
+                    <div class="test-state">
+                        <div class="test-state-row">
+                            <span class="test-state-label">Пользователь</span>
+                            <span class="test-state-value" id="testUserEmail">—</span>
+                        </div>
+                        <div class="test-state-row">
+                            <span class="test-state-label">Баланс</span>
+                            <span class="test-state-value" id="testUserBalance">—</span>
+                        </div>
+                        <div class="test-state-row">
+                            <span class="test-state-label">Подписка</span>
+                            <span class="test-state-value" id="testSubStatus">—</span>
+                        </div>
+                        <div class="test-state-row">
+                            <span class="test-state-label">Действ. до</span>
+                            <span class="test-state-value" id="testSubExpires">—</span>
+                        </div>
+                        <div class="test-state-row">
+                            <span class="test-state-label">₽/день</span>
+                            <span class="test-state-value" id="testSubDailyRate">—</span>
+                        </div>
+                    </div>
+
+                    <div class="test-vpn-resources hidden" id="testVpnResources">
+                        <h4 class="test-section-title">VPN ресурсы (PasarGuard)</h4>
+                        <div id="testVpnResourcesList"></div>
+                    </div>
+
+                    <div class="test-vpn-none hidden" id="testVpnNone">
+                        VPN конфиги не найдены
+                    </div>
+
+                    <div class="test-result hidden" id="testResult"></div>
+
+                    <div class="test-scenario hidden" id="testScenarioPanel">
+                        <h4 class="test-section-title">Сценарный тест (реальные изменения)</h4>
+                        <div class="test-scenario-controls">
+                            <select id="testScenarioSelect" class="form-select"></select>
+                            <button class="test-action-btn" id="testRunScenarioBtn" type="button">Запустить сценарий</button>
+                        </div>
+                        <div class="test-scenario-hint" id="testScenarioHint"></div>
+                    </div>
+
+                    <div class="test-actions">
+                        <h4 class="test-section-title">Действия</h4>
+                        <div class="test-actions-grid" id="testActionsGrid">
+                            <button class="test-action-btn" data-test-action="activate" id="testBtnActivate">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Активировать
+                            </button>
+                            <button class="test-action-btn" data-test-action="pause" id="testBtnPause">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                Пауза VPN
+                            </button>
+                            <button class="test-action-btn" data-test-action="unpause" id="testBtnUnpause">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Снять паузу
+                            </button>
+                            <button class="test-action-btn test-action-btn-warn" data-test-action="delete-vpn" id="testBtnDeleteVpn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m4 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                                Удалить VPN
+                            </button>
+                            <button class="test-action-btn test-action-btn-warn" data-test-action="cancel" id="testBtnCancel">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                Отменить подписку
+                            </button>
+                            <button class="test-action-btn" data-test-action="resume" id="testBtnResume">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                Возобновить
+                            </button>
+                            <button class="test-action-btn" data-test-action="dry-run" id="testBtnDryRun">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                Тест биллинга
+                            </button>
+                            <button class="test-action-btn" data-test-action="email-code" id="testBtnEmailCode">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m22 6-10 7L2 6"/></svg>
+                                Email: код входа
+                            </button>
+                            <button class="test-action-btn" data-test-action="email-low-balance" id="testBtnEmailLowBalance">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5"/><path d="M12 16h.01"/><path d="M10.29 3.86 1.82 18A2 2 0 0 0 3.53 21h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                                Email: низкий баланс
+                            </button>
+                            <button class="test-action-btn" data-test-action="email-insufficient-funds" id="testBtnEmailInsufficientFunds">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Email: нет средств
+                            </button>
+                            <button class="test-action-btn" data-test-action="push-low-balance" id="testBtnPushLowBalance">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                Push: низкий баланс
+                            </button>
+                            <button class="test-action-btn" data-test-action="push-funds-depleted" id="testBtnPushFundsDepleted">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><line x1="4" y1="4" x2="20" y2="20"/></svg>
+                                Push: нет средств
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="test-billing-result hidden" id="testBillingResult">
+                        <h4 class="test-section-title">Результат теста биллинга</h4>
+                        <div class="test-billing-summary" id="testBillingSummary"></div>
+                        <div class="test-billing-details" id="testBillingDetails"></div>
+                    </div>
+
+                    <div class="test-scenario-result hidden" id="testScenarioResult">
+                        <h4 class="test-section-title">Отчет сценария</h4>
+                        <div class="test-scenario-summary" id="testScenarioSummary"></div>
+                        <div class="test-scenario-steps" id="testScenarioSteps"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Modal: Admin Create -->
+    <div class="modal" id="adminCreateModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Создать администратора</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="adminCreateForm" class="settings-form settings-form-single">
+                        <div class="form-group">
+                            <label for="adminCreateNickname">Никнейм</label>
+                            <input type="text" id="adminCreateNickname" placeholder="Например, ops-masha" minlength="2" maxlength="32" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="adminCreateEmail">Email</label>
+                            <input type="email" id="adminCreateEmail" placeholder="new-admin@example.com" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="adminCreatePassword">Пароль</label>
+                            <input type="password" id="adminCreatePassword" placeholder="Минимум 8 символов" minlength="8" required />
+                        </div>
+                        <div class="settings-form-actions">
+                            <button type="submit" class="btn-primary btn-full">Создать</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Group Create -->
+    <div class="modal" id="groupCreateModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Создать группу</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="groupCreateModalForm" class="modal-form">
+                        <div class="balance-grid-row">
+                            <label for="groupCreateModalName">Название</label>
+                            <input type="text" id="groupCreateModalName" maxlength="50" placeholder="Например: VIP" required />
+                        </div>
+                        <div class="balance-grid-row">
+                            <label for="groupCreateModalColor">Цвет</label>
+                            <div class="color-input-wrap">
+                                <input type="color" id="groupCreateModalColor" value="#888888" />
+                            </div>
+                        </div>
+                        <div class="balance-action-row">
+                            <button type="submit" class="action-btn" class="grid-span-full">Создать</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Group Select (for adding user to group) -->
+    <div class="modal" id="groupSelectModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Добавить в группу</h3>
+                    <button class="modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="groupSelectUserId" />
+                    <div id="groupSelectList" class="group-select-list"></div>
+                    <div class="settings-form-actions mt-sm">
+                        <button type="button" class="btn-primary" id="groupSelectConfirm" disabled>Добавить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="admin-panel.js?v=20260526-9" defer></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[Unit]
+Description=EL-DUCK VPN Server
+Documentation=https://github.com/idealzm/el-duck
+After=network.target
+
+[Service]
+Type=forking
+User=root
+WorkingDirectory=/root/el-duckDEV
+ExecStart=/usr/bin/pm2 start ecosystem.config.cjs
+ExecStop=/usr/bin/pm2 stop el-duck
+ExecReload=/usr/bin/pm2 restart el-duck
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
