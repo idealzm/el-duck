@@ -106,6 +106,8 @@ const elements = {
   notifSendBtn: document.getElementById('notifSendBtn'),
   notifResult: document.getElementById('notifResult'),
   notifSubscribers: document.getElementById('notifSubscribers'),
+  notifPriority: document.getElementById('notifPriority'),
+  notifExpiresAt: document.getElementById('notifExpiresAt'),
 
   // Admins
   adminCreateForm: document.getElementById('adminCreateForm'),
@@ -128,6 +130,9 @@ const elements = {
   promoInstantGrant: document.getElementById('promoInstantGrant'),
   promoRewardValue: document.getElementById('promoRewardValue'),
   promoMinTopup: document.getElementById('promoMinTopup'),
+  promoStartsAt: document.getElementById('promoStartsAt'),
+  promoEndsAt: document.getElementById('promoEndsAt'),
+  promoPerUserLimit: document.getElementById('promoPerUserLimit'),
   promoIsActive: document.getElementById('promoIsActive'),
   promoCodesTable: document.getElementById('promoCodesTable'),
 
@@ -1963,7 +1968,9 @@ if (elements.notificationForm) {
             title: elements.notifTitle.value || 'El-Duck VPN',
             body: elements.notifBody.value,
             targetType,
-            userIds
+            userIds,
+            priority: elements.notifPriority?.value || 'normal',
+            expiresAt: elements.notifExpiresAt?.value ? new Date(elements.notifExpiresAt.value).toISOString() : null
           })
         });
 
@@ -2040,7 +2047,9 @@ if (elements.promoCreateForm) {
           instantGrant: !!elements.promoInstantGrant.checked,
           rewardValue: Number(elements.promoRewardValue.value || 0),
           minTopup: Number(elements.promoMinTopup.value || 0),
-          perUserLimit: 1,
+          perUserLimit: Number(elements.promoPerUserLimit?.value || 1),
+          startsAt: elements.promoStartsAt?.value ? new Date(elements.promoStartsAt.value).toISOString() : null,
+          endsAt: elements.promoEndsAt?.value ? new Date(elements.promoEndsAt.value).toISOString() : null,
           isActive: !!elements.promoIsActive.checked
         })
       });
@@ -2138,10 +2147,14 @@ function renderPromoCodesTable(rows) {
   }
 
   tbody.innerHTML = rows.map(p => {
+    const timeInfo = [];
+    if (p.starts_at) timeInfo.push(`с ${formatDate(p.starts_at)}`);
+    if (p.ends_at) timeInfo.push(`до ${formatDate(p.ends_at)}`);
+    const timeBadge = timeInfo.length ? `<br><span class="promo-time-badge">${timeInfo.join(' ')}</span>` : '';
     return `
       <tr>
         <td>${p.id}</td>
-        <td>${escapeHtml(p.code)}</td>
+        <td>${escapeHtml(p.code)}${timeBadge}</td>
         <td>${p.instant_grant ? 'мгновенный' : 'к пополнению'}</td>
         <td>${Number(p.reward_value || 0).toFixed(2)} ₽</td>
         <td>${p.used_count || 0}</td>

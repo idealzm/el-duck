@@ -14,7 +14,8 @@ function listPromoCodes(limit, offset) {
 function createPromoCode(payload) {
   const normalized = {
     ...payload,
-    rewardType: payload.rewardType || 'fixed'
+    rewardType: payload.rewardType || 'fixed',
+    isActive: payload.isActive !== undefined ? !!payload.isActive : true
   };
 
   ensureInstantGrantCompatible(normalized.rewardType, !!normalized.instantGrant);

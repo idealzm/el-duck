@@ -3089,6 +3089,13 @@ body.admin-auth-pending .admin-layout {
     grid-column: 1 / -1;
 }
 
+.promo-time-badge {
+    font-size: 11px;
+    color: #9ca3af;
+    display: inline-block;
+    margin-top: 2px;
+}
+
 .marketing-col .data-table {
     table-layout: auto;
     padding: var(--sp-lg) var(--sp-xl);

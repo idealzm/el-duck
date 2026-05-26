@@ -20,7 +20,11 @@ const validatePromoCode = createValidator({
   minTopup: { required: false, type: 'number', min: 0 },
   maxReward: { required: false, type: 'number', min: 0 },
   totalLimit: { required: false, type: 'number', min: 1 },
-  perUserLimit: { required: false, type: 'number', min: 1 }
+  perUserLimit: { required: false, type: 'number', min: 1 },
+  startsAt: { required: false, type: 'string' },
+  endsAt: { required: false, type: 'string' },
+  description: { required: false, type: 'string' },
+  isActive: { required: false, type: 'boolean' }
 });
 
 router.get('/promocodes', async (req, res) => {

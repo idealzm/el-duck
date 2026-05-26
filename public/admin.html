@@ -393,6 +393,18 @@
                                         <label for="notifBody">Текст</label>
                                         <textarea id="notifBody" class="textarea-tall" placeholder="Ваш баланс скоро закончится..." required></textarea>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="notifPriority">Приоритет</label>
+                                        <select id="notifPriority">
+                                            <option value="normal">Обычный</option>
+                                            <option value="high">Высокий (выделение)</option>
+                                            <option value="low">Низкий</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="notifExpiresAt">Показывать до (пусто = бессрочно)</label>
+                                        <input type="datetime-local" id="notifExpiresAt" />
+                                    </div>
                                     <button type="submit" class="btn-primary" id="notifSendBtn">Отправить</button>
                                 </form>
                                 <div id="notifResult" class="result-msg hidden"></div>
@@ -616,6 +628,9 @@
                                     <div class="form-group"><label for="promoCode">Код</label><input id="promoCode" type="text" maxlength="32" required /></div>
                                     <div class="form-group"><label for="promoRewardValue">Бонус (₽)</label><input id="promoRewardValue" type="number" min="0.01" step="0.01" required /></div>
                                     <div class="form-group"><label for="promoMinTopup">Мин. сумма пополнения</label><input id="promoMinTopup" type="number" min="0" step="0.01" value="0" /></div>
+                                    <div class="form-group"><label for="promoStartsAt">Начало действия</label><input id="promoStartsAt" type="datetime-local" /></div>
+                                    <div class="form-group"><label for="promoEndsAt">Окончание действия</label><input id="promoEndsAt" type="datetime-local" /></div>
+                                    <div class="form-group"><label for="promoPerUserLimit">Лимит на пользователя</label><input id="promoPerUserLimit" type="number" min="1" value="1" /></div>
                                     <div class="form-group promo-checkboxes-row"><label for="promoInstantGrant" class="checkbox-field"><input id="promoInstantGrant" type="checkbox" /><span class="checkbox-mark" aria-hidden="true"></span> Мгновенно начислять на баланс (без пополнения)</label><label for="promoIsActive" class="checkbox-field"><input id="promoIsActive" type="checkbox" checked /><span class="checkbox-mark" aria-hidden="true"></span> Активен</label></div>
                                     <div class="promo-form-actions">
                                         <button type="submit" class="btn-primary btn-full">Создать промокод</button>
