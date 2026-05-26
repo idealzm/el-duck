@@ -2860,6 +2860,21 @@ body.modal-open {
     padding: var(--sp-md);
 }
 
+.popup-priority-high .admin-popup-modal-content {
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.25);
+}
+
+.popup-priority-low .admin-popup-modal-content {
+    opacity: 0.85;
+}
+
+.admin-popup-expires {
+    color: #fb923c;
+    font-size: 12px;
+    margin-top: var(--sp-xs);
+}
+
 .toast.info {
     border-color: #666;
     color: #c8c8c8;

@@ -1,6 +1,7 @@
 const express = require('express');
 const { ok } = require('../../utils/httpResponse');
 const { sendNotification, getNotificationStats } = require('../../services/adminNotificationService');
+const { getPopupStats, cleanupExpiredPopups, getAllPopups } = require('../../services/adminPopupMessageService');
 const { failFromError } = require('./_helpers');
 
 const router = express.Router();
@@ -15,6 +16,24 @@ router.post('/notifications/send', async (req, res) => {
 
 router.get('/notifications/stats', async (req, res) => {
   return ok(res, getNotificationStats());
+});
+
+router.get('/notifications/popups', async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+    return ok(res, { popups: getAllPopups(limit, offset) });
+  } catch (error) {
+    return failFromError(res, error, 'Ошибка получения popup-уведомлений');
+  }
+});
+
+router.post('/notifications/cleanup-expired', async (req, res) => {
+  try {
+    return ok(res, cleanupExpiredPopups());
+  } catch (error) {
+    return failFromError(res, error, 'Ошибка очистки истёкших уведомлений');
+  }
 });
 
 module.exports = router;

@@ -21,7 +21,7 @@ function resolveRecipientUsers(userIds) {
   return users;
 }
 
-function createPopupMessage({ title, body, targetType, userIds, adminId }) {
+function createPopupMessage({ title, body, targetType, userIds, adminId, expiresAt, priority }) {
   const normalizedBody = String(body || '').trim();
   if (!normalizedBody) {
     throw new AppError('Текст сообщения обязателен', 400);
@@ -29,13 +29,17 @@ function createPopupMessage({ title, body, targetType, userIds, adminId }) {
 
   const normalizedTitle = String(title || '').trim() || null;
   const normalizedTargetType = normalizeTargetType(targetType);
+  const normalizedExpiresAt = expiresAt || null;
+  const normalizedPriority = ['low', 'normal', 'high'].includes(String(priority || '').toLowerCase())
+    ? String(priority || 'normal').toLowerCase()
+    : 'normal';
   const recipientUsers = normalizedTargetType === 'selected' ? resolveRecipientUsers(userIds) : [];
 
   const tx = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO admin_popup_messages (sender_admin_id, title, body, target_type)
-      VALUES (?, ?, ?, ?)
-    `).run(adminId || null, normalizedTitle, normalizedBody, normalizedTargetType);
+      INSERT INTO admin_popup_messages (sender_admin_id, title, body, target_type, expires_at, priority)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(adminId || null, normalizedTitle, normalizedBody, normalizedTargetType, normalizedExpiresAt, normalizedPriority);
 
     const messageId = Number(result.lastInsertRowid);
     let recipients = 0;
@@ -61,7 +65,7 @@ function createPopupMessage({ title, body, targetType, userIds, adminId }) {
       recipients = recipientUsers.length;
     }
 
-    return { messageId, recipients, targetType: normalizedTargetType, recipientUserIds };
+    return { messageId, recipients, targetType: normalizedTargetType, recipientUserIds, expiresAt: normalizedExpiresAt, priority: normalizedPriority };
   });
 
   return tx();
@@ -75,11 +79,17 @@ function getPendingPopupForUser(userId) {
       m.title,
       m.body,
       m.target_type,
-      m.created_at
+      m.created_at,
+      m.expires_at,
+      m.priority
     FROM admin_popup_message_recipients r
     JOIN admin_popup_messages m ON m.id = r.message_id
     WHERE r.user_id = ? AND r.acknowledged_at IS NULL
-    ORDER BY m.created_at ASC, r.id ASC
+      AND (m.expires_at IS NULL OR m.expires_at > datetime('now'))
+    ORDER BY
+      CASE m.priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 WHEN 'low' THEN 2 ELSE 1 END,
+      m.created_at ASC,
+      r.id ASC
     LIMIT 1
   `).get(userId);
 }
@@ -113,9 +123,42 @@ function getPopupStats() {
   };
 }
 
+function cleanupExpiredPopups() {
+  const result = db.prepare(`
+    DELETE FROM admin_popup_message_recipients
+    WHERE message_id IN (
+      SELECT id FROM admin_popup_messages
+      WHERE expires_at IS NOT NULL AND expires_at <= datetime('now')
+    )
+  `).run();
+
+  const msgs = db.prepare(`
+    DELETE FROM admin_popup_messages
+    WHERE expires_at IS NOT NULL AND expires_at <= datetime('now')
+  `).run();
+
+  return { removedRecipients: result.changes, removedMessages: msgs.changes };
+}
+
+function getAllPopups(limit = 50, offset = 0) {
+  return db.prepare(`
+    SELECT m.*, 
+      COUNT(r.id) AS total_recipients,
+      SUM(CASE WHEN r.acknowledged_at IS NOT NULL THEN 1 ELSE 0 END) AS acknowledged_count,
+      SUM(CASE WHEN r.acknowledged_at IS NULL THEN 1 ELSE 0 END) AS pending_count
+    FROM admin_popup_messages m
+    LEFT JOIN admin_popup_message_recipients r ON r.message_id = m.id
+    GROUP BY m.id
+    ORDER BY m.created_at DESC
+    LIMIT ? OFFSET ?
+  `).all(limit, offset);
+}
+
 module.exports = {
   createPopupMessage,
   getPendingPopupForUser,
   acknowledgePopupForUser,
-  getPopupStats
+  getPopupStats,
+  cleanupExpiredPopups,
+  getAllPopups
 };

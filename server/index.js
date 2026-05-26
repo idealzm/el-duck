@@ -213,6 +213,7 @@ server.listen(PORT, () => {
 const Subscription = require('./models/Subscription');
 const AuthCode = require('./models/AuthCode');
 const subscriptionBilling = require('./services/subscriptionBilling');
+const { cleanupExpiredPopups } = require('./services/adminPopupMessageService');
 
 setInterval(() => {
   try {
@@ -225,6 +226,17 @@ setInterval(() => {
     console.error('[Cron] Ошибка очистки:', err.message);
   }
 }, 5 * 60 * 1000); // каждые 5 минут
+
+setInterval(() => {
+  try {
+    const result = cleanupExpiredPopups();
+    if (result.removedMessages > 0) {
+      console.log(`[Cron] Удалено ${result.removedMessages} истёкших уведомлений`);
+    }
+  } catch (err) {
+    console.error('[Cron] Ошибка очистки popup:', err.message);
+  }
+}, 10 * 60 * 1000); // каждые 10 минут
 
 // Проверка и отключение истёкших cancelled подписок, интервал из env
 const expiredCancelledMs = config.expiredCancelledCheckMs || 15000;

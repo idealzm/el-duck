@@ -8,7 +8,7 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: process.env.EL_DUCK_PORT || 3000
+        PORT: 3000
       }
     }
   ]

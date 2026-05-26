@@ -4,7 +4,7 @@ set -euo pipefail
 # ============================================================
 # EL-DUCK VPN — VPS Deploy & Update
 #
-# Порт: 3000 (reverse-proxy → Caddy/Nginx → 443)
+# Порт: 3000 (PM2)
 #
 # Команды:
 #   bash infra/vps/deploy.sh                # Обновить до последнего коммита
@@ -15,7 +15,7 @@ set -euo pipefail
 #   bash infra/vps/deploy.sh --backup       # Создать бекап БД прямо сейчас
 # ============================================================
 
-PROJECT_DIR="${EL_DUCK_DIR:-/root/el-duckDEV}"
+PROJECT_DIR="${EL_DUCK_DIR:-/root/el-duck}"
 APP_PORT="${EL_DUCK_PORT:-3000}"
 APP_USER="${EL_DUCK_USER:-root}"
 REPO_URL="${EL_DUCK_REPO_URL:-}"

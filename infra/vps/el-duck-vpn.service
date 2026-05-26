@@ -6,7 +6,7 @@ After=network.target
 [Service]
 Type=forking
 User=root
-WorkingDirectory=/root/el-duckDEV
+WorkingDirectory=/root/el-duck
 ExecStart=/usr/bin/pm2 start ecosystem.config.cjs
 ExecStop=/usr/bin/pm2 stop el-duck
 ExecReload=/usr/bin/pm2 restart el-duck

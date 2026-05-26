@@ -1232,7 +1232,11 @@ function openAdminPopupModal(message) {
     elements.adminPopupTitle.textContent = message.title || 'Сообщение от администрации';
   }
   if (elements.adminPopupDate) {
-    elements.adminPopupDate.textContent = `Отправлено: ${formatDateTime(message.createdAt)}`;
+    let dateText = `Отправлено: ${formatDateTime(message.createdAt)}`;
+    if (message.expiresAt) {
+      dateText += ` · Доступно до: ${formatDateTime(message.expiresAt)}`;
+    }
+    elements.adminPopupDate.textContent = dateText;
   }
   if (elements.adminPopupBody) {
     elements.adminPopupBody.textContent = String(message.body || '');
@@ -1240,6 +1244,10 @@ function openAdminPopupModal(message) {
   if (elements.adminPopupReadCheckbox) {
     elements.adminPopupReadCheckbox.checked = false;
   }
+  const modalEl = elements.adminPopupModal;
+  modalEl.classList.remove('popup-priority-low', 'popup-priority-normal', 'popup-priority-high');
+  const priority = message.priority || 'normal';
+  modalEl.classList.add(`popup-priority-${priority}`);
   elements.adminPopupModal.classList.add('active');
 }
 

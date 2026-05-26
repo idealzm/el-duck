@@ -20,3 +20,4 @@ server/data/
 graphify-out/
 
 infra/vps/github.env
+infra/vps/deploy.envNOTES.md

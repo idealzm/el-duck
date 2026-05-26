@@ -119,6 +119,8 @@ router.get('/popup/pending', async (req, res) => {
         title: popup.title || 'Сообщение от администрации',
         body: popup.body,
         targetType: popup.target_type,
+        priority: popup.priority || 'normal',
+        expiresAt: popup.expires_at || null,
         createdAt: popup.created_at
       }
     });

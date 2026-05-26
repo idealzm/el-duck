@@ -600,6 +600,27 @@ function initDatabase() {
     // таблица уже существует
   }
 
+  try {
+    db.exec('ALTER TABLE admin_popup_messages ADD COLUMN expires_at DATETIME');
+  } catch (e) {
+    // колонка уже существует
+  }
+
+  try {
+    db.exec('ALTER TABLE admin_popup_messages ADD COLUMN priority TEXT DEFAULT \'normal\' CHECK(priority IN (\'low\', \'normal\', \'high\'))');
+  } catch (e) {
+    // колонка уже существует
+  }
+
+  try {
+    const idxExists = db.prepare("SELECT 1 FROM pragma_index_list('admin_popup_messages') WHERE name = 'idx_popup_expires'").get();
+    if (!idxExists) {
+      db.exec('CREATE INDEX IF NOT EXISTS idx_popup_expires ON admin_popup_messages(expires_at)');
+    }
+  } catch (e) {
+    // индекс уже существует
+  }
+
   console.log('База данных инициализирована');
 }
 
