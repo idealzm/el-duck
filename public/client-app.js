@@ -198,20 +198,17 @@ function setPromoTypeBadge(type) {
   if (!type) {
     elements.promoTypeBadge.classList.add('hidden');
     elements.promoTypeBadge.textContent = '';
-    elements.promoTypeBadge.className = 'promo-type-badge';
     return;
   }
 
   if (type === 'instant') {
     elements.promoTypeBadge.textContent = 'Мгновенный';
     elements.promoTypeBadge.className = 'promo-type-badge instant';
-    elements.promoTypeBadge.classList.remove('hidden');
     return;
   }
 
   elements.promoTypeBadge.textContent = 'К пополнению';
   elements.promoTypeBadge.className = 'promo-type-badge topup';
-  elements.promoTypeBadge.classList.remove('hidden');
 }
 
 function getAvatarText(email) {
