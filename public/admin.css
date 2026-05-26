@@ -3118,7 +3118,7 @@ body.admin-auth-pending .admin-layout {
 .text-bold { font-weight: bold; }
 .text-hint { color: #888; font-size: 12px; }
 .text-muted { color: #666; }
-.textarea-tall { min-height: 100px; }
+.textarea-tall { min-height: 100px; resize: vertical; }
 
 .col-5 { width: 5%; }
 .col-7 { width: 7%; }
