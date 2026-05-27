@@ -1,7 +1,7 @@
 const express = require('express');
 const { ok } = require('../../utils/httpResponse');
 const { sendNotification, getNotificationStats } = require('../../services/adminNotificationService');
-const { getPopupStats, cleanupExpiredPopups, getAllPopups } = require('../../services/adminPopupMessageService');
+const { getPopupStats, cleanupExpiredPopups, getAllPopups, deletePopup } = require('../../services/adminPopupMessageService');
 const { failFromError } = require('./_helpers');
 
 const router = express.Router();
@@ -33,6 +33,16 @@ router.post('/notifications/cleanup-expired', async (req, res) => {
     return ok(res, cleanupExpiredPopups());
   } catch (error) {
     return failFromError(res, error, 'Ошибка очистки истёкших уведомлений');
+  }
+});
+
+router.delete('/notifications/popups/:id', async (req, res) => {
+  try {
+    const result = deletePopup(req.params.id);
+    return ok(res, result);
+  } catch (error) {
+    if (error.statusCode) return failFromError(res, error, error.message);
+    return failFromError(res, error, 'Ошибка удаления уведомления');
   }
 });
 

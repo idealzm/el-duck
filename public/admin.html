@@ -425,6 +425,26 @@
                                         <span class="info-value" id="notifSubscribers">—</span>
                                     </div>
                                 </div>
+                                <div class="popup-list-section">
+                                    <div class="popup-list-header">
+                                        <h4>Существующие уведомления</h4>
+                                        <button type="button" class="btn-sm btn-secondary" id="cleanupExpiredPopupsBtn">Очистить истёкшие</button>
+                                    </div>
+                                    <table class="data-table popup-list-table" id="popupListTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Заголовок</th>
+                                                <th>Приоритет</th>
+                                                <th>Прочитано</th>
+                                                <th>Создано</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="popupListBody"></tbody>
+                                    </table>
+                                    <div class="popup-list-empty hidden" id="popupListEmpty">Нет уведомлений</div>
+                                    <div class="popup-list-pagination" id="popupListPagination"></div>
+                                </div>
                             </div>
                         </div>
                     </div>

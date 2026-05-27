@@ -109,6 +109,11 @@ const elements = {
   notifPriority: document.getElementById('notifPriority'),
   notifExpiresAt: document.getElementById('notifExpiresAt'),
   notifMinReadTime: document.getElementById('notifMinReadTime'),
+  popupListBody: document.getElementById('popupListBody'),
+  popupListTable: document.getElementById('popupListTable'),
+  popupListEmpty: document.getElementById('popupListEmpty'),
+  popupListPagination: document.getElementById('popupListPagination'),
+  cleanupExpiredPopupsBtn: document.getElementById('cleanupExpiredPopupsBtn'),
 
   // Admins
   adminCreateForm: document.getElementById('adminCreateForm'),
@@ -2016,6 +2021,29 @@ if (elements.notifUsersList) {
   });
 }
 
+if (elements.popupListBody) {
+  elements.popupListBody.addEventListener('click', (event) => {
+    const btn = event.target.closest('.popup-delete-btn');
+    if (btn) {
+      deletePopup(btn.dataset.id);
+    }
+  });
+}
+
+if (elements.popupListPagination) {
+  elements.popupListPagination.addEventListener('click', (event) => {
+    const btn = event.target.closest('.pagination-btn');
+    if (btn) {
+      popupCurrentPage = Number(btn.dataset.page || 0);
+      loadPopups();
+    }
+  });
+}
+
+if (elements.cleanupExpiredPopupsBtn) {
+  elements.cleanupExpiredPopupsBtn.addEventListener('click', cleanupExpiredPopups);
+}
+
 if (elements.referralSettingsForm) {
   elements.referralSettingsForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2075,6 +2103,94 @@ async function loadNotifications() {
     const totalMessages = Number(data.popupMessages || 0);
     elements.notifSubscribers.textContent = `${subscribers} (unread popup: ${unread}, всего popup: ${totalMessages})`;
   } catch (e) {}
+  await loadPopups();
+}
+
+const POPUP_PAGE_SIZE = 10;
+let popupCurrentPage = 0;
+
+function formatPopupPriority(priority) {
+  const map = { high: 'Высокий', normal: 'Обычный', low: 'Низкий' };
+  return map[priority] || priority || 'Обычный';
+}
+
+async function loadPopups() {
+  if (!elements.popupListBody) return;
+  try {
+    const data = await apiRequest('/api/admin/notifications/popups?limit=200&offset=0');
+    const popups = data.popups || [];
+
+    if (!popups.length) {
+      if (elements.popupListTable) elements.popupListTable.classList.add('hidden');
+      if (elements.popupListEmpty) elements.popupListEmpty.classList.remove('hidden');
+      if (elements.popupListPagination) elements.popupListPagination.innerHTML = '';
+      return;
+    }
+
+    if (elements.popupListTable) elements.popupListTable.classList.remove('hidden');
+    if (elements.popupListEmpty) elements.popupListEmpty.classList.add('hidden');
+
+    const totalPages = Math.ceil(popups.length / POPUP_PAGE_SIZE);
+    if (popupCurrentPage >= totalPages) popupCurrentPage = Math.max(0, totalPages - 1);
+    const start = popupCurrentPage * POPUP_PAGE_SIZE;
+    const page = popups.slice(start, start + POPUP_PAGE_SIZE);
+
+    elements.popupListBody.innerHTML = page.map(p => {
+      const title = escapeHtml(p.title || 'Без заголовка');
+      const priority = formatPopupPriority(p.priority);
+      const total = Number(p.total_recipients || 0);
+      const ack = Number(p.acknowledged_count || 0);
+      const unread = Number(p.pending_count || 0);
+      const date = p.created_at ? new Date(p.created_at).toLocaleDateString('ru-RU') : '—';
+      return `<tr data-id="${p.id}">
+        <td class="popup-title-cell">${title}</td>
+        <td><span class="popup-priority-badge popup-priority-${p.priority || 'normal'}">${priority}</span></td>
+        <td>${ack}/${total} <span class="popup-unread-count">(${unread} не прочитано)</span></td>
+        <td>${date}</td>
+        <td><button type="button" class="btn-sm btn-danger popup-delete-btn" data-id="${p.id}">Удалить</button></td>
+      </tr>`;
+    }).join('');
+
+    renderPopupPagination(totalPages);
+  } catch (e) {
+    console.error('Failed to load popups:', e);
+  }
+}
+
+function renderPopupPagination(totalPages) {
+  if (!elements.popupListPagination || totalPages <= 1) {
+    if (elements.popupListPagination) elements.popupListPagination.innerHTML = '';
+    return;
+  }
+  let html = '';
+  for (let i = 0; i < totalPages; i++) {
+    const active = i === popupCurrentPage ? ' pagination-btn-active' : '';
+    html += `<button type="button" class="pagination-btn${active}" data-page="${i}">${i + 1}</button>`;
+  }
+  elements.popupListPagination.innerHTML = html;
+}
+
+async function deletePopup(id) {
+  if (!confirm('Удалить это уведомление? Все пользователи перестанут его видеть.')) return;
+  try {
+    await apiRequest(`/api/admin/notifications/popups/${id}`, { method: 'DELETE' });
+    showToast('Уведомление удалено', 'success');
+    await loadPopups();
+    await loadNotifications();
+  } catch (e) {
+    showToast(e.message || 'Ошибка удаления', 'error');
+  }
+}
+
+async function cleanupExpiredPopups() {
+  try {
+    const result = await apiRequest('/api/admin/notifications/cleanup-expired', { method: 'POST' });
+    showToast(`Удалено: ${result.removedMessages || 0} истёкших уведомлений`, 'success');
+    await loadPopups();
+    await loadNotifications();
+  } catch (e) {
+    showToast(e.message || 'Ошибка очистки', 'error');
+  }
 }
 
 // =====================================

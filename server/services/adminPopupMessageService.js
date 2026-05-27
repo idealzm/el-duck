@@ -156,11 +156,29 @@ function getAllPopups(limit = 50, offset = 0) {
   `).all(limit, offset);
 }
 
+function deletePopup(id) {
+  const parsedId = Number.parseInt(id, 10);
+  if (!Number.isFinite(parsedId) || parsedId <= 0) {
+    throw new AppError('Некорректный ID сообщения', 400);
+  }
+
+  const existing = db.prepare('SELECT id FROM admin_popup_messages WHERE id = ?').get(parsedId);
+  if (!existing) {
+    throw new AppError('Сообщение не найдено', 404);
+  }
+
+  const recipients = db.prepare('DELETE FROM admin_popup_message_recipients WHERE message_id = ?').run(parsedId);
+  const message = db.prepare('DELETE FROM admin_popup_messages WHERE id = ?').run(parsedId);
+
+  return { deletedRecipients: recipients.changes, deleted: message.changes > 0 };
+}
+
 module.exports = {
   createPopupMessage,
   getPendingPopupForUser,
   acknowledgePopupForUser,
   getPopupStats,
   cleanupExpiredPopups,
-  getAllPopups
+  getAllPopups,
+  deletePopup
 };
