@@ -1436,6 +1436,8 @@ body.admin-auth-pending .admin-layout {
 
 .popup-list-section {
     margin-top: var(--sp-lg);
+    padding-top: var(--sp-lg);
+    border-top: 1px solid var(--border-color);
 }
 
 .popup-list-header {
@@ -1445,32 +1447,26 @@ body.admin-auth-pending .admin-layout {
     margin-bottom: var(--sp-md);
 }
 
-.popup-list-header h4 {
-    margin: 0;
-    font-size: 14px;
-    color: var(--text-primary);
+.popup-list-heading {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .popup-list-empty {
     color: var(--text-secondary);
     font-size: 13px;
-    padding: var(--sp-md) 0;
-}
-
-.popup-title-cell {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    padding: var(--sp-lg) 0;
+    text-align: center;
 }
 
 .popup-priority-badge {
     display: inline-block;
     padding: 2px 8px;
-    border-radius: 4px;
     font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
 }
 
 .popup-priority-badge.popup-priority-high {
@@ -1505,7 +1501,6 @@ body.admin-auth-pending .admin-layout {
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     padding: 4px 10px;
-    border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
 }
@@ -1516,7 +1511,7 @@ body.admin-auth-pending .admin-layout {
 
 .pagination-btn.pagination-btn-active {
     background: var(--accent);
-    color: #fff;
+    color: #000;
     border-color: var(--accent);
 }
 

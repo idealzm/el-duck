@@ -427,21 +427,30 @@
                                 </div>
                                 <div class="popup-list-section">
                                     <div class="popup-list-header">
-                                        <h4>Существующие уведомления</h4>
+                                        <span class="popup-list-heading">Существующие уведомления</span>
                                         <button type="button" class="btn-sm btn-secondary" id="cleanupExpiredPopupsBtn">Очистить истёкшие</button>
                                     </div>
-                                    <table class="data-table popup-list-table" id="popupListTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Заголовок</th>
-                                                <th>Приоритет</th>
-                                                <th>Прочитано</th>
-                                                <th>Создано</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="popupListBody"></tbody>
-                                    </table>
+                                    <div class="table-scroll">
+                                        <table class="data-table" id="popupListTable">
+                                            <colgroup>
+                                                <col class="col-35">
+                                                <col class="col-15">
+                                                <col class="col-20">
+                                                <col class="col-15">
+                                                <col class="col-15">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>Заголовок</th>
+                                                    <th>Приоритет</th>
+                                                    <th>Прочитано</th>
+                                                    <th>Создано</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="popupListBody"></tbody>
+                                        </table>
+                                    </div>
                                     <div class="popup-list-empty hidden" id="popupListEmpty">Нет уведомлений</div>
                                     <div class="popup-list-pagination" id="popupListPagination"></div>
                                 </div>

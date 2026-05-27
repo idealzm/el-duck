@@ -2121,13 +2121,13 @@ async function loadPopups() {
     const popups = data.popups || [];
 
     if (!popups.length) {
-      if (elements.popupListTable) elements.popupListTable.classList.add('hidden');
+      if (elements.popupListTable) elements.popupListTable.closest('.table-scroll')?.classList.add('hidden');
       if (elements.popupListEmpty) elements.popupListEmpty.classList.remove('hidden');
       if (elements.popupListPagination) elements.popupListPagination.innerHTML = '';
       return;
     }
 
-    if (elements.popupListTable) elements.popupListTable.classList.remove('hidden');
+    if (elements.popupListTable) elements.popupListTable.closest('.table-scroll')?.classList.remove('hidden');
     if (elements.popupListEmpty) elements.popupListEmpty.classList.add('hidden');
 
     const totalPages = Math.ceil(popups.length / POPUP_PAGE_SIZE);
@@ -2136,18 +2136,18 @@ async function loadPopups() {
     const page = popups.slice(start, start + POPUP_PAGE_SIZE);
 
     elements.popupListBody.innerHTML = page.map(p => {
-      const title = escapeHtml(p.title || 'Без заголовка');
+      const title = escapeHtml(p.title || '—');
       const priority = formatPopupPriority(p.priority);
       const total = Number(p.total_recipients || 0);
       const ack = Number(p.acknowledged_count || 0);
       const unread = Number(p.pending_count || 0);
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('ru-RU') : '—';
       return `<tr data-id="${p.id}">
-        <td class="popup-title-cell">${title}</td>
+        <td>${title}</td>
         <td><span class="popup-priority-badge popup-priority-${p.priority || 'normal'}">${priority}</span></td>
-        <td>${ack}/${total} <span class="popup-unread-count">(${unread} не прочитано)</span></td>
+        <td>${ack}/${total} <span class="popup-unread-count">(${unread})</span></td>
         <td>${date}</td>
-        <td><button type="button" class="btn-sm btn-danger popup-delete-btn" data-id="${p.id}">Удалить</button></td>
+        <td><button type="button" class="action-btn danger popup-delete-btn" data-id="${p.id}">Удалить</button></td>
       </tr>`;
     }).join('');
 
