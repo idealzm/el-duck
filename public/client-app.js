@@ -25,7 +25,8 @@ const state = {
     socket: null,
     key: null
   },
-  pendingAdminPopup: null
+  pendingAdminPopup: null,
+  popupCountdownTimer: null
 };
 
 // DOM элементы
@@ -1225,6 +1226,10 @@ function openWelcomeModal() {
 function openAdminPopupModal(message) {
   if (!message || !elements.adminPopupModal) return;
   state.pendingAdminPopup = message;
+  if (state.popupCountdownTimer) {
+    clearInterval(state.popupCountdownTimer);
+    state.popupCountdownTimer = null;
+  }
   if (elements.adminPopupTitle) {
     elements.adminPopupTitle.textContent = message.title || 'Сообщение от администрации';
   }
@@ -1245,6 +1250,38 @@ function openAdminPopupModal(message) {
   modalEl.classList.remove('popup-priority-low', 'popup-priority-normal', 'popup-priority-high');
   const priority = message.priority || 'normal';
   modalEl.classList.add(`popup-priority-${priority}`);
+
+  const minReadTime = Number(message.minReadTime) || 0;
+  if (minReadTime > 0 && elements.adminPopupConfirmBtn && elements.adminPopupReadCheckbox) {
+    elements.adminPopupConfirmBtn.disabled = true;
+    elements.adminPopupReadCheckbox.disabled = true;
+    elements.adminPopupConfirmBtn.textContent = `Подтвердить (${minReadTime} сек)`;
+    modalEl.classList.add('popup-countdown-active');
+    let remaining = minReadTime;
+    state.popupCountdownTimer = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(state.popupCountdownTimer);
+        state.popupCountdownTimer = null;
+        elements.adminPopupConfirmBtn.disabled = false;
+        elements.adminPopupReadCheckbox.disabled = false;
+        elements.adminPopupConfirmBtn.textContent = 'Подтвердить';
+        modalEl.classList.remove('popup-countdown-active');
+      } else {
+        elements.adminPopupConfirmBtn.textContent = `Подтвердить (${remaining} сек)`;
+      }
+    }, 1000);
+  } else {
+    if (elements.adminPopupConfirmBtn) {
+      elements.adminPopupConfirmBtn.disabled = false;
+      elements.adminPopupConfirmBtn.textContent = 'Подтвердить';
+    }
+    if (elements.adminPopupReadCheckbox) {
+      elements.adminPopupReadCheckbox.disabled = false;
+    }
+    modalEl.classList.remove('popup-countdown-active');
+  }
+
   elements.adminPopupModal.classList.add('active');
 }
 
@@ -1275,6 +1312,10 @@ async function acknowledgeAdminPopup() {
       method: 'POST'
     });
     state.pendingAdminPopup = null;
+    if (state.popupCountdownTimer) {
+      clearInterval(state.popupCountdownTimer);
+      state.popupCountdownTimer = null;
+    }
     closeModal(elements.adminPopupModal);
     showToast('Сообщение подтверждено', 'success');
     await loadPendingAdminPopup();

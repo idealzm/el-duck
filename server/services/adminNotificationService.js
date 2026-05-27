@@ -6,12 +6,12 @@ const {
   getPopupStats
 } = require('./adminPopupMessageService');
 
-async function sendNotification({ title, body, targetType, userIds, expiresAt, priority }, adminId = null) {
+async function sendNotification({ title, body, targetType, userIds, expiresAt, priority, minReadTime }, adminId = null) {
   if (!String(body || '').trim()) {
     throw new AppError('Текст уведомления обязателен', 400);
   }
 
-  const popup = createPopupMessage({ title, body, targetType, userIds, adminId, expiresAt, priority });
+  const popup = createPopupMessage({ title, body, targetType, userIds, adminId, expiresAt, priority, minReadTime });
 
   let sent = 0;
   let failed = 0;

@@ -621,6 +621,12 @@ function initDatabase() {
     // индекс уже существует
   }
 
+  try {
+    db.exec('ALTER TABLE admin_popup_messages ADD COLUMN min_read_time INTEGER DEFAULT 0');
+  } catch (e) {
+    // колонка уже существует
+  }
+
   console.log('База данных инициализирована');
 }
 

@@ -108,6 +108,7 @@ const elements = {
   notifSubscribers: document.getElementById('notifSubscribers'),
   notifPriority: document.getElementById('notifPriority'),
   notifExpiresAt: document.getElementById('notifExpiresAt'),
+  notifMinReadTime: document.getElementById('notifMinReadTime'),
 
   // Admins
   adminCreateForm: document.getElementById('adminCreateForm'),
@@ -1970,7 +1971,8 @@ if (elements.notificationForm) {
             targetType,
             userIds,
             priority: elements.notifPriority?.value || 'normal',
-            expiresAt: elements.notifExpiresAt?.value ? new Date(elements.notifExpiresAt.value).toISOString() : null
+            expiresAt: elements.notifExpiresAt?.value ? new Date(elements.notifExpiresAt.value).toISOString() : null,
+            minReadTime: parseInt(elements.notifMinReadTime?.value, 10) || 0
           })
         });
 

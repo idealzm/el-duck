@@ -405,6 +405,17 @@
                                         <label for="notifExpiresAt">Показывать до (пусто = бессрочно)</label>
                                         <input type="datetime-local" id="notifExpiresAt" />
                                     </div>
+                                    <div class="form-group">
+                                        <label for="notifMinReadTime">Минимальное время прочтения</label>
+                                        <select id="notifMinReadTime">
+                                            <option value="0">Без ограничения</option>
+                                            <option value="5">5 секунд</option>
+                                            <option value="10">10 секунд</option>
+                                            <option value="15">15 секунд</option>
+                                            <option value="30">30 секунд</option>
+                                            <option value="60">60 секунд</option>
+                                        </select>
+                                    </div>
                                     <button type="submit" class="btn-primary" id="notifSendBtn">Отправить</button>
                                 </form>
                                 <div id="notifResult" class="result-msg hidden"></div>

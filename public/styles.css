@@ -2869,6 +2869,16 @@ body.modal-open {
     opacity: 0.85;
 }
 
+.popup-countdown-active .btn-welcome-done {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.popup-countdown-active .consent-check {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .admin-popup-expires {
     color: #fb923c;
     font-size: 12px;

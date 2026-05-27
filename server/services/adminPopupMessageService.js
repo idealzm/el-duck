@@ -21,7 +21,7 @@ function resolveRecipientUsers(userIds) {
   return users;
 }
 
-function createPopupMessage({ title, body, targetType, userIds, adminId, expiresAt, priority }) {
+function createPopupMessage({ title, body, targetType, userIds, adminId, expiresAt, priority, minReadTime }) {
   const normalizedBody = String(body || '').trim();
   if (!normalizedBody) {
     throw new AppError('Текст сообщения обязателен', 400);
@@ -33,13 +33,14 @@ function createPopupMessage({ title, body, targetType, userIds, adminId, expires
   const normalizedPriority = ['low', 'normal', 'high'].includes(String(priority || '').toLowerCase())
     ? String(priority || 'normal').toLowerCase()
     : 'normal';
+  const normalizedMinReadTime = Math.max(0, Math.floor(Number(minReadTime) || 0));
   const recipientUsers = normalizedTargetType === 'selected' ? resolveRecipientUsers(userIds) : [];
 
   const tx = db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO admin_popup_messages (sender_admin_id, title, body, target_type, expires_at, priority)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(adminId || null, normalizedTitle, normalizedBody, normalizedTargetType, normalizedExpiresAt, normalizedPriority);
+      INSERT INTO admin_popup_messages (sender_admin_id, title, body, target_type, expires_at, priority, min_read_time)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(adminId || null, normalizedTitle, normalizedBody, normalizedTargetType, normalizedExpiresAt, normalizedPriority, normalizedMinReadTime);
 
     const messageId = Number(result.lastInsertRowid);
     let recipients = 0;
@@ -65,7 +66,7 @@ function createPopupMessage({ title, body, targetType, userIds, adminId, expires
       recipients = recipientUsers.length;
     }
 
-    return { messageId, recipients, targetType: normalizedTargetType, recipientUserIds, expiresAt: normalizedExpiresAt, priority: normalizedPriority };
+    return { messageId, recipients, targetType: normalizedTargetType, recipientUserIds, expiresAt: normalizedExpiresAt, priority: normalizedPriority, minReadTime: normalizedMinReadTime };
   });
 
   return tx();
@@ -81,7 +82,8 @@ function getPendingPopupForUser(userId) {
       m.target_type,
       m.created_at,
       m.expires_at,
-      m.priority
+      m.priority,
+      m.min_read_time
     FROM admin_popup_message_recipients r
     JOIN admin_popup_messages m ON m.id = r.message_id
     WHERE r.user_id = ? AND r.acknowledged_at IS NULL

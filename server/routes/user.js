@@ -121,7 +121,8 @@ router.get('/popup/pending', async (req, res) => {
         targetType: popup.target_type,
         priority: popup.priority || 'normal',
         expiresAt: popup.expires_at || null,
-        createdAt: popup.created_at
+        createdAt: popup.created_at,
+        minReadTime: popup.min_read_time || 0
       }
     });
   } catch (error) {
