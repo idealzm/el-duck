@@ -2613,8 +2613,8 @@ function openGroupSelectModal(userId) {
 
   elements.groupSelectList.querySelectorAll('.group-select-item').forEach(item => {
     item.addEventListener('click', () => {
-      elements.groupSelectList.querySelectorAll('.group-select-item').forEach(i => i.style.background = '');
-      item.style.background = 'var(--bg-tertiary, rgba(255,255,255,0.08))';
+      elements.groupSelectList.querySelectorAll('.group-select-item').forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
       state.selectedGroupId = item.dataset.groupId;
       elements.groupSelectConfirm.disabled = false;
     });

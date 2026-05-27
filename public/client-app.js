@@ -1250,6 +1250,7 @@ function openAdminPopupModal(message) {
 
 async function loadPendingAdminPopup() {
   if (!state.user) return;
+  if (elements.welcomeModal?.classList.contains('active')) return;
   try {
     const data = await apiRequest('/api/user/popup/pending');
     const message = data?.message || null;

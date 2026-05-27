@@ -3065,7 +3065,9 @@ body.modal-open {
 .stat-suspended { color: #bdbdbd; }
 .table-sm { font-size: 12px; }
 .color-swatch { display: inline-block; width: 16px; height: 16px; vertical-align: middle; }
-.group-select-item { cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 6px; transition: background .15s; }
+.group-select-item { cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 6px; transition: background .15s, border-color .15s; }
+.group-select-item:hover { background: var(--bg-tertiary, rgba(255,255,255,0.06)); border-color: var(--text-secondary, #888); }
+.group-select-item.selected { background: var(--bg-tertiary, rgba(255,255,255,0.1)); border-color: var(--accent, #5b9bd5); box-shadow: 0 0 0 1px var(--accent, #5b9bd5); }
 .group-select-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 .group-select-name { flex: 1; }
 .group-select-count { color: var(--text-secondary); font-size: 12px; }
