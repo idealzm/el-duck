@@ -1310,6 +1310,7 @@ async function closeWelcomeModal() {
 
   localStorage.setItem('welcomeShown', 'true');
   closeModal(elements.welcomeModal);
+  setTimeout(() => loadPendingAdminPopup(), 350);
 }
 
 function openSubscriptionModal() {
@@ -1420,8 +1421,7 @@ elements.codeForm.addEventListener('submit', async (e) => {
 
     if (loaded && state.user && !state.user.consentAccepted) {
       setTimeout(() => openWelcomeModal(), 300);
-    }
-    if (loaded) {
+    } else if (loaded) {
       setTimeout(() => loadPendingAdminPopup(), 350);
     }
   } catch (error) {
@@ -2089,8 +2089,7 @@ async function init() {
       }
       if (isAuthenticated && !state.user?.consentAccepted) {
         setTimeout(() => openWelcomeModal(), 300);
-      }
-      if (isAuthenticated) {
+      } else if (isAuthenticated) {
         setTimeout(() => loadPendingAdminPopup(), 350);
       }
     }

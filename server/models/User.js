@@ -5,7 +5,17 @@ class User {
   static create(email) {
     const stmt = db.prepare('INSERT INTO users (email, user_uuid) VALUES (?, ?)');
     const result = stmt.run(email, crypto.randomUUID());
-    return this.getById(result.lastInsertRowid);
+    const user = this.getById(result.lastInsertRowid);
+
+    db.prepare(`
+      INSERT OR IGNORE INTO admin_popup_message_recipients (message_id, user_id)
+      SELECT m.id, ?
+      FROM admin_popup_messages m
+      WHERE m.target_type = 'all'
+        AND (m.expires_at IS NULL OR m.expires_at > datetime('now'))
+    `).run(user.id);
+
+    return user;
   }
 
   static getById(id) {
