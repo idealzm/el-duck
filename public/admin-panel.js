@@ -519,6 +519,18 @@ function renderUsersTable(users) {
     const totalDailyRate = dailySubs.reduce((sum, s) => sum + s.dailyRate, 0);
     const daysRemaining = totalDailyRate > 0 ? Math.floor(user.balance / totalDailyRate) : '—';
 
+    // Рассчитываем "Действ. до" — реальная дата до которой хватит баланса
+    let validUntil;
+    if (user.unlimitedBalance) {
+      validUntil = '∞';
+    } else if (typeof daysRemaining === 'number') {
+      validUntil = formatDate(new Date(Date.now() + daysRemaining * 24 * 60 * 60 * 1000).toISOString());
+    } else if (user.subscriptions[0]) {
+      validUntil = formatDate(user.subscriptions[0].expiresAt);
+    } else {
+      validUntil = '—';
+    }
+
     // Определяем цвет для дней
     let daysColorClass = '';
     if (typeof daysRemaining === 'number') {
@@ -542,7 +554,7 @@ function renderUsersTable(users) {
         <td>${escapeHtml(user.email)}${groupBadges ? ' ' + groupBadges : ''}</td>
         <td>${user.unlimitedBalance ? '∞' : `${formatBalance(user.balance)} ₽`}</td>
         <td>${subscriptionStatus}</td>
-        <td>${user.subscriptions[0] ? formatDate(user.subscriptions[0].expiresAt) : '—'}</td>
+        <td>${validUntil}</td>
         <td class="${daysColorClass}">${typeof daysRemaining === 'number' ? `${daysRemaining} дн.` : '—'}</td>
         <td>${formatDate(user.createdAt)}</td>
         <td>
