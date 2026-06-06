@@ -44,20 +44,22 @@ class MagicLink {
     const tokenHash = hashToken(rawToken);
 
     const result = db.transaction(() => {
-      const stmt = db.prepare(`
-        UPDATE magic_links
-        SET used = 1, payload = NULL
-        WHERE id = (
-          SELECT id FROM magic_links
-          WHERE token = ? AND used = 0 AND expires_at > CURRENT_TIMESTAMP
-          ORDER BY id DESC
-          LIMIT 1
-        ) AND used = 0
-        RETURNING id, email, type, payload
+      const selectStmt = db.prepare(`
+        SELECT id, email, type, payload
+        FROM magic_links
+        WHERE token = ? AND used = 0 AND expires_at > CURRENT_TIMESTAMP
+        ORDER BY id DESC
+        LIMIT 1
       `);
 
-      const row = stmt.get(tokenHash);
+      const row = selectStmt.get(tokenHash);
       if (!row) return null;
+
+      db.prepare(`
+        UPDATE magic_links
+        SET used = 1, payload = NULL
+        WHERE id = ?
+      `).run(row.id);
 
       let payload = null;
       if (row.payload) {
