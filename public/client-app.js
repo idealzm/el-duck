@@ -912,7 +912,7 @@ async function showConfig(title, type, id, protocolKey = '') {
     elements.configContent.innerHTML = warningHtml + content;
     if (subscriptionLink) {
       const qrImg = document.getElementById('vpn-qr-img');
-      if (qrImg) qrImg.src = generateQrDataUrl(subscriptionLink);
+      if (qrImg) qrImg.src = await generateQrDataUrl(subscriptionLink);
     }
     elements.configModal.classList.add('active');
   } catch (error) {
@@ -1082,10 +1082,10 @@ function safeCode(code) {
   return `<code>${escapeHtml(code)}</code>`;
 }
 
-function generateQrDataUrl(text) {
+async function generateQrDataUrl(text) {
   try {
     const canvas = document.createElement('canvas');
-    QRCode.toCanvas(canvas, String(text || ''), { width: 220, margin: 2 });
+    await QRCode.toCanvas(canvas, String(text || ''), { width: 220, margin: 2 });
     return canvas.toDataURL('image/png');
   } catch (err) {
     console.error('QR generation failed:', err);
