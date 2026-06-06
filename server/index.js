@@ -189,6 +189,20 @@ app.get('/support/:ticketUuid', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
+app.get('/auth/verify-registration', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+app.get('/auth/reset-password', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, '../public/reset-password.html'));
+});
+
 app.get('/terms', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/terms.html'));
 });
@@ -212,6 +226,7 @@ server.listen(PORT, () => {
 // Периодическая очистка истёкших подписок и auth-кодов
 const Subscription = require('./models/Subscription');
 const AuthCode = require('./models/AuthCode');
+const MagicLink = require('./models/MagicLink');
 const subscriptionBilling = require('./services/subscriptionBilling');
 const { cleanupExpiredPopups } = require('./services/adminPopupMessageService');
 
@@ -222,6 +237,7 @@ setInterval(() => {
       console.log(`[Cron] Помечено ${expiredResult.changes} истёкших подписок`);
     }
     AuthCode.cleanup();
+    MagicLink.cleanup();
   } catch (err) {
     console.error('[Cron] Ошибка очистки:', err.message);
   }

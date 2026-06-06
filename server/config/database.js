@@ -627,6 +627,55 @@ function initDatabase() {
     // колонка уже существует
   }
 
+  // Пароли пользователей
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_passwords (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Доверенные устройства
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS trusted_devices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      device_token TEXT UNIQUE NOT NULL,
+      user_agent TEXT,
+      ip TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_user_passwords_user ON user_passwords(user_id)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_token ON trusted_devices(device_token)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(user_id)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_expires ON trusted_devices(expires_at)`);
+
+  // Magic links (заменяют 6-значные коды)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS magic_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('registration', 'password_reset')),
+      payload TEXT,
+      expires_at DATETIME NOT NULL,
+      used BOOLEAN DEFAULT FALSE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links(email)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_magic_links_expires ON magic_links(expires_at)`);
+
   console.log('База данных инициализирована');
 }
 

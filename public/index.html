@@ -17,10 +17,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png?v=20260417-1" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png?v=20260417-1" />
     <meta name="theme-color" content="#000000">
-    <link rel="stylesheet" href="/styles.css?v=20260606-1" />
+    <link rel="stylesheet" href="/styles.css?v=20260606-4" />
     <script src="/socket.io/socket.io.js" defer></script>
     <script src="/qrcode.min.js?v=20260606-1" defer></script>
-    <script src="/client-app.js?v=20260606-1" defer></script>
+    <script src="/client-app.js?v=20260607-1" defer></script>
 </head>
 <body class="auth-screen-open">
     <div class="app">
@@ -31,33 +31,122 @@
             </header>
             <main class="auth-main">
                 <div class="auth-card">
-                    <h1 class="auth-title">Вход</h1>
-                    <p class="auth-subtitle">Введите email для получения кода подтверждения</p>
-                    
+                    <h1 class="auth-title" id="authTitle">Вход</h1>
+                    <p class="auth-subtitle" id="authSubtitle">Введите email для продолжения</p>
+
+                    <!-- Quick Login (trusted device) -->
+                    <div id="quickLoginSection" class="auth-form hidden">
+                        <div class="quick-login-info">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <span>Войти как <strong id="quickLoginEmail"></strong>?</span>
+                        </div>
+                        <button type="button" class="btn-primary" id="quickLoginBtn">
+                            <span class="btn-text">Войти</span>
+                            <span class="btn-loader hidden">⏳</span>
+                        </button>
+                        <button type="button" class="btn-link" id="quickLoginOtherBtn">Войти с другим аккаунтом</button>
+                    </div>
+
+                    <!-- Step 1: Email -->
                     <form id="emailForm" class="auth-form">
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
                         </div>
                         <button type="submit" class="btn-primary" id="sendCodeBtn">
-                            <span class="btn-text">Получить код</span>
+                            <span class="btn-text">Продолжить</span>
                             <span class="btn-loader hidden">⏳</span>
                         </button>
+                        <button type="button" class="btn-link" id="forgotPasswordBtn">Забыли пароль?</button>
                     </form>
 
-                    <form id="codeForm" class="auth-form hidden">
+                    <!-- Step 2a: Login with password (existing user with password) -->
+                    <form id="loginForm" class="auth-form hidden">
                         <div class="form-group">
-                            <label for="code">Код подтверждения</label>
-                            <input type="text" id="code" name="code" placeholder="123456" maxlength="6" pattern="[0-9]*" inputmode="numeric" required />
-                            <p class="form-hint">Код отправлен на <span id="emailDisplay"></span></p>
-                            <p class="spam-warning hidden" id="spamWarning">📬 Не приходит? Проверьте папку <strong>Спам</strong></p>
+                            <label for="loginPassword">Пароль</label>
+                            <div class="password-input-wrap">
+                                <input type="password" id="loginPassword" name="password" placeholder="Введите пароль" required autocomplete="current-password" />
+                                <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Показать пароль">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                            <p class="form-hint">Вход для <span id="loginEmailDisplay"></span></p>
                         </div>
-                        <button type="submit" class="btn-primary" id="verifyCodeBtn">
+                        <button type="submit" class="btn-primary" id="loginBtn">
                             <span class="btn-text">Войти</span>
                             <span class="btn-loader hidden">⏳</span>
                         </button>
-                        <button type="button" class="btn-link" id="resendCodeBtn">Отправить код повторно</button>
-                        <button type="button" class="btn-link" id="changeEmailBtn">Изменить email</button>
+                        <button type="button" class="btn-link" id="loginForgotPasswordBtn">Забыли пароль?</button>
+                        <button type="button" class="btn-link" id="loginBackBtn">Изменить email</button>
+                    </form>
+
+                    <!-- Step 2b: Set password (new user OR existing user without password) -->
+                    <form id="registerForm" class="auth-form hidden">
+                        <div id="registerNeedsPasswordNotice" class="auth-notice hidden">
+                            <p>Для продолжения необходимо установить пароль.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Пароль</label>
+                            <div class="password-input-wrap">
+                                <input type="password" id="registerPassword" name="password" placeholder="Минимум 6 символов" required minlength="6" autocomplete="new-password" />
+                                <button type="button" class="password-toggle" data-target="registerPassword" aria-label="Показать пароль">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPasswordConfirm">Подтвердите пароль</label>
+                            <div class="password-input-wrap">
+                                <input type="password" id="registerPasswordConfirm" name="passwordConfirm" placeholder="Повторите пароль" required minlength="6" autocomplete="new-password" />
+                                <button type="button" class="password-toggle" data-target="registerPasswordConfirm" aria-label="Показать пароль">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                            <p class="form-hint" id="registerEmailHint"></p>
+                        </div>
+                        <button type="submit" class="btn-primary" id="registerBtn">
+                            <span class="btn-text">Зарегистрироваться</span>
+                            <span class="btn-loader hidden">⏳</span>
+                        </button>
+                        <button type="button" class="btn-link" id="registerBackBtn">Изменить email</button>
+                    </form>
+
+                    <!-- Verify code (DEPRECATED: replaced by magic link email-sent section below) -->
+                    <form id="verifyCodeForm" class="auth-form hidden" style="display:none!important;">
+                    </form>
+
+                    <!-- Email sent confirmation (after registration or password reset) -->
+                    <div id="emailSentSection" class="auth-form hidden">
+                        <div style="text-align:center;margin-bottom:16px;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" style="margin:0 auto;">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                        </div>
+                        <p class="form-hint" style="text-align:center;font-size:14px;margin-bottom:8px;">Письмо отправлено на <strong id="emailSentDisplay"></strong></p>
+                        <p class="form-hint" style="text-align:center;font-size:13px;color:#999;">Проверьте почту и нажмите ссылку для подтверждения. Если письмо не пришло — проверьте папку Спам.</p>
+                        <button type="button" class="btn-primary" id="emailSentResendBtn" style="margin-top:16px;" data-type="registration">
+                            <span class="btn-text">Отправить ссылку повторно</span>
+                            <span class="btn-loader hidden">⏳</span>
+                        </button>
+                        <button type="button" class="btn-link" id="emailSentBackBtn">Вернуться ко входу</button>
+                    </div>
+
+                    <!-- Forgot password -->
+                    <form id="forgotPasswordForm" class="auth-form hidden">
+                        <div class="form-group">
+                            <label for="forgotEmail">Email</label>
+                            <input type="email" id="forgotEmail" name="email" placeholder="you@example.com" required autocomplete="email" />
+                        </div>
+                        <button type="submit" class="btn-primary" id="forgotPasswordSubmitBtn">
+                            <span class="btn-text">Отправить ссылку</span>
+                            <span class="btn-loader hidden">⏳</span>
+                        </button>
+                        <button type="button" class="btn-link" id="forgotBackBtn">Назад ко входу</button>
+                    </form>
+
+                    <!-- Reset password form (DEPRECATED: replaced by magic link → reset-password.html) -->
+                    <form id="resetPasswordForm" class="auth-form hidden" style="display:none!important;">
                     </form>
 
                     <button type="button" class="btn-link support-login-btn" id="supportLoginBtn">Написать в поддержку</button>

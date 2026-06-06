@@ -5,52 +5,172 @@ const rateLimit = require('express-rate-limit');
 const { createValidator } = require('../middleware/validate');
 const config = require('../config/env');
 const User = require('../models/User');
-const AuthCode = require('../models/AuthCode');
+const { UserPassword, hashPassword: hashPasswordFn } = require('../models/UserPassword');
+const { db } = require('../config/database');
+const MagicLink = require('../models/MagicLink');
+const TrustedDevice = require('../models/TrustedDevice');
 const emailService = require('../services/email');
 const authMiddleware = require('../middleware/auth');
 const { issueToken, setSessionCookie, clearSessionCookie, getTokenFromRequest, verifyToken } = require('../utils/sessionToken');
 
-const validateSendCode = createValidator({
+function getClientIp(req) {
+  return req.ip || req.connection?.remoteAddress || '';
+}
+
+function getUserAgent(req) {
+  return (req.headers['user-agent'] || '').slice(0, 500);
+}
+
+function setDeviceCookie(res, deviceToken) {
+  const maxAge = Number(config.auth.deviceCookieMaxAgeMs || 365 * 24 * 60 * 60 * 1000);
+  res.cookie(config.auth.deviceCookieName || 'ed_device', deviceToken, {
+    httpOnly: true,
+    secure: config.auth.secureCookies,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge
+  });
+}
+
+function clearDeviceCookie(res) {
+  res.clearCookie(config.auth.deviceCookieName || 'ed_device', {
+    httpOnly: true,
+    secure: config.auth.secureCookies,
+    sameSite: 'Lax',
+    path: '/'
+  });
+}
+
+function getDeviceTokenFromRequest(req) {
+  const cookieName = config.auth.deviceCookieName || 'ed_device';
+  const cookies = req.headers.cookie;
+  if (!cookies) return null;
+  const parts = cookies.split(';');
+  for (const part of parts) {
+    const idx = part.indexOf('=');
+    if (idx <= 0) continue;
+    const key = part.slice(0, idx).trim();
+    if (key === cookieName) {
+      try { return decodeURIComponent(part.slice(idx + 1).trim()); }
+      catch (_) { return part.slice(idx + 1).trim(); }
+    }
+  }
+  return null;
+}
+
+function buildMagicLinkUrl(token, type) {
+  const base = String(config.app?.url || '').replace(/\/+$/, '') || 'http://localhost:3000';
+  if (type === 'registration') {
+    return `${base}/auth/verify-registration?token=${encodeURIComponent(token)}`;
+  }
+  if (type === 'password_reset') {
+    return `${base}/auth/reset-password?token=${encodeURIComponent(token)}`;
+  }
+  return `${base}/auth/verify?token=${encodeURIComponent(token)}`;
+}
+
+function issueSessionAndSetCookies(req, res, user, { rememberDevice = true } = {}) {
+  const updatedUser = User.incrementTokenVersion(user.id);
+  const userUuid = User.ensureUuid(updatedUser.id);
+
+  const token = issueToken({
+    userId: updatedUser.id,
+    email: updatedUser.email,
+    tokenVersion: Number(updatedUser.token_version || 0)
+  });
+  setSessionCookie(res, config.auth.userCookieName, token);
+
+  if (rememberDevice) {
+    const deviceToken = TrustedDevice.create(updatedUser.id, {
+      userAgent: getUserAgent(req),
+      ip: getClientIp(req)
+    });
+    setDeviceCookie(res, deviceToken);
+    TrustedDevice.limitDevices(updatedUser.id);
+  }
+
+  return {
+    success: true,
+    user: {
+      id: userUuid,
+      uuid: userUuid,
+      email: updatedUser.email,
+      balance: updatedUser.balance
+    }
+  };
+}
+
+// ===================== VALIDATORS =====================
+
+const validateCheckEmail = createValidator({
   email: { required: true, type: 'email' }
 });
 
-const validateVerifyCode = createValidator({
+const validateRegister = createValidator({
   email: { required: true, type: 'email' },
-  code: { required: true, type: 'string', minLength: 4, maxLength: 10 }
+  password: { required: true, type: 'string', minLength: 6, maxLength: 128 }
 });
 
-const validatePasswordLogin = createValidator({
+const validateLogin = createValidator({
   email: { required: true, type: 'email' },
   password: { required: true, type: 'string', minLength: 1 }
 });
 
-const sendCodeLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 5,
-  message: { error: 'Слишком много запросов. Попробуйте позже.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    const ip = req.ip || req.connection.remoteAddress;
-    return `send_code_${ip}_${email || 'no_email'}`;
-  }
+const validateTrustedLogin = createValidator({});
+
+const validateRequestPasswordReset = createValidator({
+  email: { required: true, type: 'email' }
 });
 
-const verifyCodeLimiter = rateLimit({
+const validateResetPasswordWithToken = createValidator({
+  token: { required: true, type: 'string', minLength: 10 },
+  password: { required: true, type: 'string', minLength: 6, maxLength: 128 }
+});
+
+const validateSetPassword = createValidator({
+  password: { required: true, type: 'string', minLength: 6, maxLength: 128 }
+});
+
+// ===================== RATE LIMITERS =====================
+
+const verifyRegistrationLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 5,
   message: { error: 'Слишком много попыток. Попробуйте позже.' },
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    const ip = req.ip || req.connection.remoteAddress;
-    return `verify_code_${ip}_${email || 'no_email'}`;
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `verify_reg_${ip}`;
   }
 });
 
-const passwordLoginLimiter = rateLimit({
+const checkEmailLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  message: { error: 'Слишком много запросов. Попробуйте позже.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `check_email_${ip}`;
+  }
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { error: 'Слишком много попыток регистрации. Попробуйте позже.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `register_${ip}_${email || 'no_email'}`;
+  }
+});
+
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Слишком много попыток входа. Попробуйте позже.' },
@@ -58,170 +178,446 @@ const passwordLoginLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    const ip = req.ip || req.connection.remoteAddress;
-    return `password_login_${ip}_${email || 'no_email'}`;
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `login_${ip}_${email || 'no_email'}`;
   }
 });
 
-/**
- * Генерация случайного кода
- */
-function generateCode() {
-  return crypto.randomInt(100000, 1000000).toString();
-}
-
-/**
- * POST /api/auth/send-code
- * Отправка кода подтверждения на email
- */
-router.post('/send-code', sendCodeLimiter, validateSendCode, async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Генерируем код
-    const code = generateCode();
-
-    // Сохраняем код в БД
-    AuthCode.create(normalizedEmail, code);
-
-    // Отправляем email
-    const emailResult = await emailService.sendVerificationCode(normalizedEmail, code);
-    if (!emailResult?.success) {
-      console.error(`[Auth] Не удалось отправить код на ${normalizedEmail}:`, emailResult?.error);
-      return res.status(502).json({ error: 'Не удалось отправить письмо. Проверьте настройки почты.' });
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'Код отправлен на email',
-      email: normalizedEmail
-    });
-  } catch (error) {
-    console.error('Send code error:', error);
-    res.status(500).json({ error: 'Ошибка отправки кода' });
+const trustedLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Слишком много попыток. Попробуйте позже.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `trusted_login_${ip}`;
   }
 });
 
+const passwordResetLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { error: 'Слишком много запросов. Попробуйте позже.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `pw_reset_${ip}_${email || 'no_email'}`;
+  }
+});
+
+const magicLinkVerifyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: { error: 'Слишком много попыток. Попробуйте позже.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    return `magic_verify_${ip}`;
+  }
+});
+
+// ===================== ROUTES =====================
+
 /**
- * POST /api/auth/verify-code
- * Проверка кода и выдача токена
+ * POST /api/auth/check-email
+ * Check if an email exists and whether the user has a password set
  */
-router.post('/verify-code', verifyCodeLimiter, validateVerifyCode, async (req, res) => {
+router.post('/check-email', checkEmailLimiter, validateCheckEmail, (req, res) => {
   try {
-    const { email, code } = req.body;
-
-    if (!email || !code) {
-      return res.status(400).json({ error: 'Email и код обязательны' });
-    }
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Проверяем код
-    const isValid = AuthCode.verify(normalizedEmail, code.toString());
-
-    if (!isValid) {
-      AuthCode.invalidateAllForEmail(normalizedEmail);
-      return res.status(400).json({ error: 'Неверный код или истёк срок действия' });
-    }
-
-    // Ищем или создаём пользователя
-    let user = User.getByEmail(normalizedEmail);
+    const normalizedEmail = String(req.body.email).trim().toLowerCase();
+    const user = User.getByEmail(normalizedEmail);
 
     if (!user) {
-      user = User.create(normalizedEmail);
+      return res.json({ success: true, status: 'new' });
     }
 
-    // Ротация сессии: инвалидируем предыдущие токены пользователя
-    user = User.incrementTokenVersion(user.id);
-    const userUuid = User.ensureUuid(user.id);
+    const hasPassword = UserPassword.exists(user.id);
+    return res.json({ success: true, status: hasPassword ? 'has_password' : 'needs_password' });
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({ error: 'Ошибка проверки email' });
+  }
+});
 
-    const token = issueToken({
-      userId: user.id,
-      email: user.email,
-      tokenVersion: Number(user.token_version || 0)
+/**
+ * POST /api/auth/register
+ * Register new user: create user record + password hash, send magic link
+ * Also used for existing users without password to set their password
+ */
+router.post('/register', registerLimiter, validateRegister, async (req, res) => {
+  try {
+    const email = String(req.body.email).trim().toLowerCase();
+    const password = String(req.body.password);
+
+    const existingUser = User.getByEmail(email);
+    if (existingUser && UserPassword.exists(existingUser.id)) {
+      return res.status(409).json({ error: 'Пользователь с таким email уже зарегистрирован. Используйте вход по паролю.' });
+    }
+
+    const passwordHash = hashPasswordFn(password);
+
+    const token = MagicLink.create(email, 'registration', {
+      passwordHash,
+      expiresInMinutes: 10
     });
 
-    setSessionCookie(res, config.auth.userCookieName, token);
+    MagicLink.cleanup();
+
+    const link = buildMagicLinkUrl(token, 'registration');
+    const emailResult = await emailService.sendRegistrationMagicLink(email, link);
+    if (!emailResult?.success) {
+      console.error(`[Auth] Не удалось отправить magic link на ${email}:`, emailResult?.error);
+      return res.status(502).json({ error: 'Не удалось отправить письмо. Попробуйте позже.' });
+    }
 
     res.json({
       success: true,
-      user: {
-        id: userUuid,
-        uuid: userUuid,
-        email: user.email,
-        balance: user.balance
-      }
+      message: 'Ссылка для подтверждения отправлена на email',
+      email
     });
   } catch (error) {
-    console.error('Verify code error:', error);
-    res.status(500).json({ error: 'Ошибка проверки кода' });
+    console.error('Register error:', error);
+    res.status(500).json({ error: 'Ошибка регистрации' });
   }
 });
 
 /**
- * POST /api/auth/password-login
- * Тестовый вход по email+паролю
+ * GET /api/auth/verify-registration?token=xxx
+ * Verify registration magic link → create user + set password → issue session → redirect
  */
-router.post('/password-login', passwordLoginLimiter, validatePasswordLogin, async (req, res) => {
+router.get('/verify-registration', magicLinkVerifyLimiter, (req, res) => {
   try {
-    if (!config.auth.allowPasswordLogin) {
-      return res.status(403).json({ error: 'Вход по паролю отключён' });
+    const rawToken = String(req.query.token || '').trim();
+    if (!rawToken) {
+      return res.redirect('/?auth_error=' + encodeURIComponent('Ссылка недействительна'));
     }
 
-    const email = String(req.body.email || '').trim().toLowerCase();
+    const linkData = MagicLink.verify(rawToken);
+    if (!linkData || linkData.type !== 'registration') {
+      return res.redirect('/?auth_error=' + encodeURIComponent('Ссылка устарела или недействительна'));
+    }
+
+    const email = linkData.email;
+
+    let user = User.getByEmail(email);
+    if (user && UserPassword.exists(user.id)) {
+      return res.redirect('/?auth_error=' + encodeURIComponent('Аккаунт уже подтверждён. Войдите по паролю.'));
+    }
+
+    if (!user) {
+      user = User.create(email);
+    }
+
+    if (!UserPassword.exists(user.id) && linkData.payload?.passwordHash) {
+      UserPassword.setHash(user.id, linkData.payload.passwordHash);
+    }
+
+    const result = issueSessionAndSetCookies(req, res, user);
+    TrustedDevice.cleanup();
+
+    res.redirect('/?auth_verified=1');
+  } catch (error) {
+    console.error('Verify registration magic link error:', error);
+    res.redirect('/?auth_error=' + encodeURIComponent('Ошибка подтверждения'));
+  }
+});
+
+/**
+ * POST /api/auth/resend-registration
+ * Resend registration magic link
+ */
+router.post('/resend-registration', registerLimiter, validateCheckEmail, async (req, res) => {
+  try {
+    const email = String(req.body.email).trim().toLowerCase();
     const password = String(req.body.password || '');
-    const expectedEmail = String(config.auth.passwordLoginEmail || '').trim().toLowerCase();
-    const expectedPassword = String(config.auth.passwordLoginPassword || '');
 
-    if (!expectedEmail || !expectedPassword) {
-      return res.status(503).json({ error: 'Парольный вход не настроен' });
+    if (password && password.length < 6) {
+      return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
     }
 
-    const emailOk = email === expectedEmail;
-    const provided = Buffer.from(password);
-    const expected = Buffer.from(expectedPassword);
-    const passOk = provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
+    const existingUser = User.getByEmail(email);
+    if (existingUser && UserPassword.exists(existingUser.id)) {
+      return res.status(409).json({ error: 'Пользователь с таким email уже зарегистрирован. Используйте вход по паролю.' });
+    }
 
-    if (!emailOk || !passOk) {
+    const passwordHash = password ? hashPasswordFn(password) : null;
+    const payload = passwordHash ? { passwordHash } : {};
+
+    const token = MagicLink.create(email, 'registration', payload);
+    MagicLink.cleanup();
+
+    const link = buildMagicLinkUrl(token, 'registration');
+    const emailResult = await emailService.sendRegistrationMagicLink(email, link);
+    if (!emailResult?.success) {
+      console.error(`[Auth] Не удалось повторно отправить magic link на ${email}:`, emailResult?.error);
+      return res.status(502).json({ error: 'Не удалось отправить письмо. Попробуйте позже.' });
+    }
+
+    res.json({ success: true, message: 'Ссылка отправлена повторно' });
+  } catch (error) {
+    console.error('Resend registration error:', error);
+    res.status(500).json({ error: 'Ошибка повторной отправки' });
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Login with email + password
+ */
+router.post('/login', loginLimiter, validateLogin, async (req, res) => {
+  try {
+    const email = String(req.body.email).trim().toLowerCase();
+    const password = String(req.body.password);
+    const rememberDevice = req.body.rememberDevice !== false;
+
+    const user = User.getByEmail(email);
+    if (!user) {
       return res.status(401).json({ error: 'Неверный email или пароль' });
     }
 
-    let user = User.getByEmail(expectedEmail);
-    if (!user) {
-      user = User.create(expectedEmail);
+    if (!UserPassword.exists(user.id)) {
+      return res.status(401).json({ error: 'Пароль не установлен. Зарегистрируйтесь.' });
     }
 
-    user = User.incrementTokenVersion(user.id);
-    const userUuid = User.ensureUuid(user.id);
+    if (!UserPassword.verify(user.id, password)) {
+      return res.status(401).json({ error: 'Неверный email или пароль' });
+    }
 
-    const token = issueToken({
-      userId: user.id,
-      email: user.email,
-      tokenVersion: Number(user.token_version || 0)
-    });
-
-    setSessionCookie(res, config.auth.userCookieName, token);
-
-    res.json({
-      success: true,
-      user: {
-        id: userUuid,
-        uuid: userUuid,
-        email: user.email,
-        balance: user.balance
-      }
-    });
+    const result = issueSessionAndSetCookies(req, res, user, { rememberDevice });
+    res.json(result);
   } catch (error) {
-    console.error('Password login error:', error);
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Ошибка входа' });
+  }
+});
+
+/**
+ * POST /api/auth/trusted-login
+ * Quick login via trusted device cookie
+ */
+router.post('/trusted-login', trustedLoginLimiter, validateTrustedLogin, (req, res) => {
+  try {
+    const deviceToken = getDeviceTokenFromRequest(req);
+    if (!deviceToken) {
+      return res.status(401).json({ error: 'Устройство не распознано' });
+    }
+
+    const deviceData = TrustedDevice.verify(deviceToken);
+    if (!deviceData) {
+      clearDeviceCookie(res);
+      return res.status(401).json({ error: 'Устройство не найдено или сессия истекла' });
+    }
+
+    const user = User.getById(deviceData.userId);
+    if (!user) {
+      TrustedDevice.deleteByToken(deviceToken);
+      clearDeviceCookie(res);
+      return res.status(401).json({ error: 'Пользователь не найден' });
+    }
+
+    if (!UserPassword.exists(user.id)) {
+      TrustedDevice.deleteByToken(deviceToken);
+      TrustedDevice.deleteByUser(user.id);
+      clearDeviceCookie(res);
+      return res.status(401).json({ error: 'Пароль не установлен' });
+    }
+
+    const result = issueSessionAndSetCookies(req, res, user);
+    res.json(result);
+  } catch (error) {
+    console.error('Trusted login error:', error);
     res.status(500).json({ error: 'Ошибка авторизации' });
   }
 });
 
 /**
+ * POST /api/auth/request-password-reset
+ * Send a password-reset magic link to email
+ */
+router.post('/request-password-reset', passwordResetLimiter, validateRequestPasswordReset, async (req, res) => {
+  try {
+    const email = String(req.body.email).trim().toLowerCase();
+    const user = User.getByEmail(email);
+    if (!user) {
+      return res.json({ success: true, message: 'Если аккаунт существует, ссылка для сброса пароля отправлена на email' });
+    }
+
+    const token = MagicLink.create(email, 'password_reset');
+    MagicLink.cleanup();
+
+    const link = buildMagicLinkUrl(token, 'password_reset');
+    const emailResult = await emailService.sendPasswordResetMagicLink(email, link);
+    if (!emailResult?.success) {
+      console.error(`[Auth] Не удалось отправить ссылку сброса на ${email}:`, emailResult?.error);
+      return res.status(502).json({ error: 'Не удалось отправить письмо. Попробуйте позже.' });
+    }
+
+    res.json({ success: true, message: 'Ссылка для сброса пароля отправлена на email' });
+  } catch (error) {
+    console.error('Request password reset error:', error);
+    res.status(500).json({ error: 'Ошибка отправки ссылки' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password-with-token
+ * Reset password using magic link token (called from reset-password.html page)
+ */
+router.post('/reset-password-with-token', magicLinkVerifyLimiter, validateResetPasswordWithToken, async (req, res) => {
+  try {
+    const rawToken = String(req.body.token).trim();
+    const password = String(req.body.password);
+
+    const linkData = MagicLink.verify(rawToken);
+    if (!linkData || linkData.type !== 'password_reset') {
+      return res.status(400).json({ error: 'Ссылка устарела или недействительна' });
+    }
+
+    const user = User.getByEmail(linkData.email);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    UserPassword.set(user.id, password);
+    User.incrementTokenVersion(user.id);
+    TrustedDevice.deleteByUser(user.id);
+
+    const result = issueSessionAndSetCookies(req, res, user);
+    res.json(result);
+  } catch (error) {
+    console.error('Reset password with token error:', error);
+    res.status(500).json({ error: 'Ошибка сброса пароля' });
+  }
+});
+
+/**
+ * GET /api/auth/validate-reset-token?token=xxx
+ * Validate a password reset token without consuming it
+ */
+router.get('/validate-reset-token', magicLinkVerifyLimiter, (req, res) => {
+  try {
+    const rawToken = String(req.query.token || '').trim();
+    if (!rawToken) {
+      return res.status(400).json({ valid: false, error: 'Токен не указан' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    const row = db.prepare(`
+      SELECT * FROM magic_links
+      WHERE token = ? AND type = 'password_reset' AND used = 0 AND expires_at > CURRENT_TIMESTAMP
+    `).get(tokenHash);
+
+    if (!row) {
+      return res.json({ valid: false, error: 'Ссылка устарела или недействительна' });
+    }
+
+    const user = User.getByEmail(row.email);
+    if (!user) {
+      return res.json({ valid: false, error: 'Пользователь не найден' });
+    }
+
+    res.json({ valid: true, email: user.email });
+  } catch (error) {
+    console.error('Validate reset token error:', error);
+    res.status(500).json({ valid: false, error: 'Ошибка проверки токена' });
+  }
+});
+
+/**
+ * POST /api/auth/set-password
+ * Set password for existing user who doesn't have one (requires auth)
+ */
+router.post('/set-password', authMiddleware, validateSetPassword, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const password = String(req.body.password);
+
+    if (UserPassword.exists(userId)) {
+      return res.status(409).json({ error: 'Пароль уже установлен' });
+    }
+
+    UserPassword.set(userId, password);
+    TrustedDevice.deleteByUser(userId);
+
+    const result = issueSessionAndSetCookies(req, res, req.user);
+    res.json(result);
+  } catch (error) {
+    console.error('Set password error:', error);
+    res.status(500).json({ error: 'Ошибка установки пароля' });
+  }
+});
+
+/**
+ * DELETE /api/auth/trusted-devices
+ * Remove all trusted devices for current user (logout from all devices)
+ */
+router.delete('/trusted-devices', authMiddleware, (req, res) => {
+  try {
+    TrustedDevice.deleteByUser(req.user.id);
+    clearDeviceCookie(res);
+    res.json({ success: true, message: 'Все устройства удалены' });
+  } catch (error) {
+    console.error('Delete trusted devices error:', error);
+    res.status(500).json({ error: 'Ошибка удаления устройств' });
+  }
+});
+
+// ===================== LEGACY (deprecated) =====================
+
+/**
+ * POST /api/auth/verify-registration
+ * @deprecated Use GET /api/auth/verify-registration?token=xxx instead
+ */
+router.post('/verify-registration', verifyRegistrationLimiter, (req, res) => {
+  res.status(410).json({
+    error: 'Этот метод устарел. Используйте ссылку из письма для подтверждения.',
+    deprecated: true
+  });
+});
+
+/**
+ * POST /api/auth/send-code
+ * @deprecated Use POST /api/auth/register instead
+ */
+router.post('/send-code', (req, res) => {
+  res.status(410).json({
+    error: 'Этот метод устарел. Используйте регистрацию с_magic link.',
+    deprecated: true
+  });
+});
+
+/**
+ * POST /api/auth/verify-code
+ * @deprecated Use GET /api/auth/verify-registration?token=xxx instead
+ */
+router.post('/verify-code', (req, res) => {
+  res.status(410).json({
+    error: 'Этот метод устарел. Используйте ссылку из письма.',
+    deprecated: true
+  });
+});
+
+/**
+ * POST /api/auth/reset-password
+ * @deprecated Use POST /api/auth/reset-password-with-token instead
+ */
+router.post('/reset-password', (req, res) => {
+  res.status(410).json({
+    error: 'Этот метод устарел. Используйте ссылку из письма для сброса пароля.',
+    deprecated: true
+  });
+});
+
+// ===================== SESSION & STATUS =====================
+
+/**
  * GET /api/auth/session
- * Проверка наличия валидной пользовательской сессии
+ * Check if user has a valid session
  */
 router.get('/session', (req, res) => {
   const token = getTokenFromRequest(req, config.auth.userCookieName);
@@ -243,15 +639,46 @@ router.get('/session', (req, res) => {
       return res.json({ success: true, authenticated: false });
     }
 
-    return res.json({ success: true, authenticated: true });
+    return res.json({
+      success: true,
+      authenticated: true,
+      hasPassword: UserPassword.exists(user.id)
+    });
   } catch (_) {
     return res.json({ success: true, authenticated: false });
   }
 });
 
 /**
+ * GET /api/auth/trusted-device
+ * Check if current device is trusted (for quick login)
+ */
+router.get('/trusted-device', (req, res) => {
+  const deviceToken = getDeviceTokenFromRequest(req);
+  if (!deviceToken) {
+    return res.json({ success: true, trusted: false });
+  }
+
+  const deviceData = TrustedDevice.verify(deviceToken);
+  if (!deviceData) {
+    return res.json({ success: true, trusted: false });
+  }
+
+  const user = User.getById(deviceData.userId);
+  if (!user || !UserPassword.exists(user.id)) {
+    return res.json({ success: true, trusted: false });
+  }
+
+  return res.json({
+    success: true,
+    trusted: true,
+    email: user.email
+  });
+});
+
+/**
  * GET /api/auth/me
- * Получение данных текущего пользователя
+ * Get current user data
  */
 router.get('/me', authMiddleware, (req, res) => {
   res.json({
@@ -267,7 +694,7 @@ router.get('/me', authMiddleware, (req, res) => {
 
 /**
  * POST /api/auth/logout
- * Выход (на клиенте просто удаляем токен)
+ * Logout — invalidate session
  */
 router.post('/logout', authMiddleware, (req, res) => {
   User.incrementTokenVersion(req.user.id);
