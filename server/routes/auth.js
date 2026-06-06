@@ -261,7 +261,7 @@ router.post('/register', registerLimiter, validateRegister, async (req, res) => 
     const passwordHash = hashPasswordFn(password);
 
     const token = MagicLink.create(email, 'registration', {
-      passwordHash,
+      payload: { passwordHash },
       expiresInMinutes: 10
     });
 
@@ -345,9 +345,9 @@ router.post('/resend-registration', registerLimiter, validateCheckEmail, async (
     }
 
     const passwordHash = password ? hashPasswordFn(password) : null;
-    const payload = passwordHash ? { passwordHash } : {};
+    const payloadData = passwordHash ? { passwordHash } : {};
 
-    const token = MagicLink.create(email, 'registration', payload);
+    const token = MagicLink.create(email, 'registration', { payload: payloadData });
     MagicLink.cleanup();
 
     const link = buildMagicLinkUrl(token, 'registration');

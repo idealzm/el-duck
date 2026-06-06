@@ -1746,10 +1746,12 @@ elements.registerBackBtn.addEventListener('click', () => {
   showAuthStep('email');
 });
 
-elements.verifyBackBtn.addEventListener('click', () => {
-  resetAuthForms();
-  showAuthStep('email');
-});
+if (elements.verifyBackBtn) {
+  elements.verifyBackBtn.addEventListener('click', () => {
+    resetAuthForms();
+    showAuthStep('email');
+  });
+}
 
 elements.forgotBackBtn.addEventListener('click', () => {
   showAuthStep('email');
