@@ -12,6 +12,9 @@ class PasarguardService {
   getHttpsAgent() {
     if (this._httpsAgent) return this._httpsAgent;
     if (config.pasarguard?.skipTls) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('PASARGUARD_SKIP_TLS=true is not allowed in production');
+      }
       this._httpsAgent = new https.Agent({ rejectUnauthorized: false });
     }
     return this._httpsAgent;

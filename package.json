@@ -17,7 +17,7 @@
     "payments:reconcile:severpay": "node server/scripts/reconcile-severpay-pending.js"
   },
   "dependencies": {
-    "axios": "^1.15.0",
+    "axios": "^1.16.0",
     "better-sqlite3": "^12.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

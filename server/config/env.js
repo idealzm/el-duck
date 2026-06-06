@@ -64,6 +64,11 @@ if (isProduction && adminPassword.length < 12) {
   throw new Error('ADMIN_PASSWORD must be set and at least 12 chars in production');
 }
 
+const supportTokenEncryptionKey = process.env.SUPPORT_TOKEN_ENCRYPTION_KEY || '';
+if (isProduction && supportTokenEncryptionKey.length < 32) {
+  throw new Error('SUPPORT_TOKEN_ENCRYPTION_KEY must be set and at least 32 chars in production');
+}
+
 const adminEmail = (process.env.ADMIN_EMAIL || 'admin@el-duck.com').trim().toLowerCase();
 const passwordLoginEmail = (process.env.PASSWORD_LOGIN_EMAIL || '').trim().toLowerCase() || adminEmail;
 
@@ -108,7 +113,7 @@ module.exports = {
   },
 
   support: {
-    tokenEncryptionKey: process.env.SUPPORT_TOKEN_ENCRYPTION_KEY || jwtSecret || 'support-local-secret'
+    tokenEncryptionKey: supportTokenEncryptionKey || (isProduction ? '' : jwtSecret || 'support-dev-key')
   },
 
   auth: {
@@ -122,6 +127,11 @@ module.exports = {
     ),
     secureCookies: isProduction,
     allowPasswordLogin: toBool(process.env.ALLOW_PASSWORD_LOGIN, false),
+    deviceCookieName: process.env.AUTH_DEVICE_COOKIE_NAME || 'ed_device',
+    deviceCookieMaxAgeMs: Math.max(
+      60 * 60 * 1000,
+      parseDurationToMs(process.env.AUTH_DEVICE_COOKIE_MAX_AGE || '365d', 365 * 24 * 60 * 60 * 1000)
+    ),
     passwordLoginEmail,
     passwordLoginPassword: process.env.PASSWORD_LOGIN_PASSWORD || ''
   },

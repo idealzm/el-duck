@@ -165,6 +165,65 @@ body.support-chat-only #support-section {
     gap: var(--sp-lg);
 }
 
+.auth-notice {
+    background: rgba(255, 193, 7, 0.08);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    padding: var(--sp-md) var(--sp-lg);
+    font-size: 13px;
+    color: #e0c94e;
+    line-height: 1.5;
+}
+
+.auth-notice p {
+    margin: 0;
+}
+
+.quick-login-info {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    color: #ccc;
+    font-size: 14px;
+    padding: var(--sp-md) 0;
+}
+
+.quick-login-info strong {
+    color: #fff;
+    word-break: break-all;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrap input {
+    width: 100%;
+    padding-right: 44px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.password-toggle:hover {
+    color: #fff;
+}
+
 .consent-check {
     position: relative;
     display: flex;
@@ -353,6 +412,19 @@ body.support-chat-only #support-section {
 
 .support-create-form textarea {
     min-height: 140px;
+}
+
+body.support-chat-only .support-chat-header .btn-link-action {
+    background: #1a1a1a;
+    border: 1px solid #555;
+    padding: var(--sp-sm) var(--sp-lg);
+    font-size: 13px;
+    border-radius: 4px;
+}
+
+body.support-chat-only .support-chat-header .btn-link-action:hover {
+    background: #252525;
+    border-color: #777;
 }
 
 .support-chat-page {
@@ -621,18 +693,39 @@ body.support-chat-only #support-section {
     min-height: 0;
 }
 
+body.support-chat-only .app {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
 body.support-chat-only .main {
     padding: 0 !important;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 body.support-chat-only #support-section.active {
     padding: var(--sp-lg) var(--sp-xl);
     padding-bottom: max(var(--sp-lg), env(safe-area-inset-bottom));
     margin: 0;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 body.support-chat-only .support-chat-page {
-    min-height: 100dvh;
+    min-height: 0;
+    flex: 1;
+}
+
+body.support-chat-only .support-messages {
+    min-height: 200px;
 }
 
 /* ==================== VPN SECTION BACKGROUND ==================== */

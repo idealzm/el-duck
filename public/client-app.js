@@ -1,6 +1,8 @@
 // EL-DUCK VPN Client App
 // =====================================
 
+console.log('[EL-DUCK] client-app.js loaded, version 20260606-2');
+
 const API_URL = '';
 
 function showEl(el) { if (el) el.classList.remove('hidden'); }
@@ -33,17 +35,41 @@ const state = {
 const elements = {
   authScreen: document.getElementById('authScreen'),
   mainScreen: document.getElementById('mainScreen'),
+  authTitle: document.getElementById('authTitle'),
+  authSubtitle: document.getElementById('authSubtitle'),
   emailForm: document.getElementById('emailForm'),
-  codeForm: document.getElementById('codeForm'),
+  loginForm: document.getElementById('loginForm'),
+  registerForm: document.getElementById('registerForm'),
+  forgotPasswordForm: document.getElementById('forgotPasswordForm'),
+  resetPasswordForm: document.getElementById('resetPasswordForm'),
+  quickLoginSection: document.getElementById('quickLoginSection'),
   emailInput: document.getElementById('email'),
-  codeInput: document.getElementById('code'),
-  emailDisplay: document.getElementById('emailDisplay'),
-  spamWarning: document.getElementById('spamWarning'),
+  loginPassword: document.getElementById('loginPassword'),
+  registerPassword: document.getElementById('registerPassword'),
+  registerPasswordConfirm: document.getElementById('registerPasswordConfirm'),
+  forgotEmail: document.getElementById('forgotEmail'),
+  emailDisplay: document.getElementById('loginEmailDisplay'),
+  registerEmailHint: document.getElementById('registerEmailHint'),
+  quickLoginEmail: document.getElementById('quickLoginEmail'),
+  registerNeedsPasswordNotice: document.getElementById('registerNeedsPasswordNotice'),
   sendCodeBtn: document.getElementById('sendCodeBtn'),
-  verifyCodeBtn: document.getElementById('verifyCodeBtn'),
-  resendCodeBtn: document.getElementById('resendCodeBtn'),
-  changeEmailBtn: document.getElementById('changeEmailBtn'),
+  loginBtn: document.getElementById('loginBtn'),
+  registerBtn: document.getElementById('registerBtn'),
+  forgotPasswordSubmitBtn: document.getElementById('forgotPasswordSubmitBtn'),
+  quickLoginBtn: document.getElementById('quickLoginBtn'),
+  loginForgotPasswordBtn: document.getElementById('loginForgotPasswordBtn'),
+  forgotPasswordBtn: document.getElementById('forgotPasswordBtn'),
+  loginBackBtn: document.getElementById('loginBackBtn'),
+  registerBackBtn: document.getElementById('registerBackBtn'),
+  verifyBackBtn: document.getElementById('verifyBackBtn'),
+  forgotBackBtn: document.getElementById('forgotBackBtn'),
+  resetBackBtn: document.getElementById('resetBackBtn'),
+  quickLoginOtherBtn: document.getElementById('quickLoginOtherBtn'),
   logoutBtn: document.getElementById('logoutBtn'),
+  emailSentSection: document.getElementById('emailSentSection'),
+  emailSentDisplay: document.getElementById('emailSentDisplay'),
+  emailSentResendBtn: document.getElementById('emailSentResendBtn'),
+  emailSentBackBtn: document.getElementById('emailSentBackBtn'),
   cardsContainer: document.getElementById('cardsContainer'),
   noSubscriptionBanner: document.getElementById('noSubscriptionBanner'),
   subscribeBtn: document.getElementById('subscribeBtn'),
@@ -278,47 +304,157 @@ async function apiRequest(endpoint, options = {}) {
 // Авторизация
 // =====================================
 
-async function sendCode(email) {
-  return apiRequest('/api/auth/send-code', {
+let authState = {
+  step: 'email',
+  email: '',
+  status: null,
+  registerPassword: '',
+};
+
+function showAuthStep(step) {
+  const forms = [
+    elements.emailForm,
+    elements.loginForm,
+    elements.registerForm,
+    elements.forgotPasswordForm,
+    elements.quickLoginSection,
+    elements.emailSentSection
+  ];
+  forms.forEach(f => { if (f) f.classList.add('hidden'); });
+
+  authState.step = step;
+
+  switch (step) {
+    case 'quickLogin':
+      if (elements.quickLoginSection) elements.quickLoginSection.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = 'Вход';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = '';
+      break;
+    case 'email':
+      if (elements.emailForm) elements.emailForm.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = 'Вход';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = 'Введите email для продолжения';
+      break;
+    case 'login':
+      if (elements.loginForm) elements.loginForm.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = 'Вход';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = 'Введите пароль';
+      if (elements.emailDisplay) elements.emailDisplay.textContent = authState.email;
+      if (elements.loginPassword) elements.loginPassword.focus();
+      break;
+    case 'register':
+      if (elements.registerForm) elements.registerForm.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = authState.status === 'needs_password' ? 'Установите пароль' : 'Регистрация';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = authState.status === 'needs_password' ? 'Для продолжения необходимо создать пароль' : 'Создайте пароль для аккаунта';
+      if (elements.registerEmailHint) elements.registerEmailHint.textContent = `На ${authState.email}`;
+      if (elements.registerNeedsPasswordNotice) {
+        if (authState.status === 'needs_password') elements.registerNeedsPasswordNotice.classList.remove('hidden');
+        else elements.registerNeedsPasswordNotice.classList.add('hidden');
+      }
+      if (elements.registerBtn) {
+        elements.registerBtn.querySelector('.btn-text').textContent = authState.status === 'needs_password' ? 'Установить пароль' : 'Зарегистрироваться';
+      }
+      if (elements.registerPassword) elements.registerPassword.focus();
+      break;
+    case 'emailSent':
+      if (elements.emailSentSection) elements.emailSentSection.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = 'Проверьте почту';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = 'Мы отправили ссылку для подтверждения';
+      if (elements.emailSentDisplay) elements.emailSentDisplay.textContent = authState.email;
+      break;
+    case 'forgotPassword':
+      if (elements.forgotPasswordForm) elements.forgotPasswordForm.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = 'Сброс пароля';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = 'Введите email для восстановления';
+      if (elements.forgotEmail) {
+        elements.forgotEmail.value = authState.email || '';
+        elements.forgotEmail.focus();
+      }
+      break;
+    case 'resetLinkSent':
+      if (elements.emailSentSection) elements.emailSentSection.classList.remove('hidden');
+      if (elements.authTitle) elements.authTitle.textContent = 'Проверьте почту';
+      if (elements.authSubtitle) elements.authSubtitle.textContent = 'Мы отправили ссылку для сброса пароля';
+      if (elements.emailSentDisplay) elements.emailSentDisplay.textContent = authState.email;
+      if (elements.emailSentResendBtn) {
+        elements.emailSentResendBtn.dataset.type = 'password_reset';
+        elements.emailSentResendBtn.querySelector('.btn-text').textContent = 'Отправить ссылку повторно';
+      }
+      if (elements.emailSentBackBtn) {
+        elements.emailSentBackBtn.textContent = 'Вернуться ко входу';
+      }
+      break;
+  }
+}
+
+function resetAuthForms() {
+  if (elements.emailInput) elements.emailInput.value = '';
+  if (elements.loginPassword) elements.loginPassword.value = '';
+  if (elements.registerPassword) elements.registerPassword.value = '';
+  if (elements.registerPasswordConfirm) elements.registerPasswordConfirm.value = '';
+  if (elements.forgotEmail) elements.forgotEmail.value = '';
+  authState = { step: 'email', email: '', status: null, registerPassword: '' };
+}
+
+async function apiCheckEmail(email) {
+  return apiRequest('/api/auth/check-email', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+    timeoutMs: 10000
+  });
+}
+
+async function apiRegister(email, password) {
+  return apiRequest('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+    timeoutMs: 12000
+  });
+}
+
+async function apiResendRegistration(email, password) {
+  return apiRequest('/api/auth/resend-registration', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+    timeoutMs: 12000
+  });
+}
+
+async function apiLogin(email, password) {
+  return apiRequest('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+    timeoutMs: 10000
+  });
+}
+
+async function apiTrustedLogin() {
+  return apiRequest('/api/auth/trusted-login', {
+    method: 'POST',
+    body: JSON.stringify({}),
+    timeoutMs: 10000
+  });
+}
+
+async function apiRequestPasswordReset(email) {
+  return apiRequest('/api/auth/request-password-reset', {
     method: 'POST',
     body: JSON.stringify({ email }),
     timeoutMs: 12000
   });
 }
 
-async function verifyCode(email, code) {
+async function checkTrustedDevice() {
   try {
-    const response = await apiRequest('/api/auth/verify-code', {
-      method: 'POST',
-      body: JSON.stringify({ email, code })
-    });
-    return response;
-  } catch (error) {
-    showToast(error.message, 'error');
-    throw error;
-  }
-}
-
-function openCodeStep(email) {
-  elements.emailDisplay.textContent = email;
-  elements.spamWarning.classList.remove('hidden');
-  elements.emailForm.classList.add('hidden');
-  elements.codeForm.classList.remove('hidden');
-  elements.codeInput.focus();
-}
-
-function canFallbackToCodeEntry(error) {
-  const status = Number(error?.status || 0);
-  if (status >= 500) return true;
-
-  const message = String(error?.message || '').toLowerCase();
-  return (
-    error?.name === 'AbortError' ||
-    message.includes('ошибка запроса') ||
-    message.includes('не удалось отправить письмо') ||
-    message.includes('network') ||
-    message.includes('aborted')
-  );
+    const data = await apiRequest('/api/auth/trusted-device');
+    if (data?.trusted && data?.email) {
+      authState.email = data.email;
+      if (elements.quickLoginEmail) elements.quickLoginEmail.textContent = data.email;
+      showAuthStep('quickLogin');
+      return true;
+    }
+  } catch (_) {}
+  return false;
 }
 
 // =====================================
@@ -1061,6 +1197,9 @@ async function openSupportChat(ticketUuid, key = '') {
 
     const chatOnly = !state.user;
     setSupportChatOnlyMode(chatOnly);
+    if (elements.supportBackBtn) {
+      elements.supportBackBtn.textContent = chatOnly ? '← Вернуться ко входу' : 'Назад';
+    }
     elements.authScreen.classList.remove('active');
     elements.mainScreen.classList.add('active');
     document.body.classList.remove('auth-screen-open');
@@ -1429,80 +1568,212 @@ function closeModal(modal) {
 // События
 // =====================================
 
-// Авторизация
+// Авторизация — Password-based auth flow
+
+// Step 1: Email form — check email and route to appropriate step
 elements.emailForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = elements.emailInput.value.trim();
-  
-  if (!email) {
-    showToast('Введите email', 'error');
-    return;
-  }
+  if (!email) { showToast('Введите email', 'error'); return; }
 
   showLoading(elements.sendCodeBtn, true);
-  
   try {
-    await sendCode(email);
-    openCodeStep(email);
-  } catch (error) {
-    if (canFallbackToCodeEntry(error)) {
-      openCodeStep(email);
-      showToast('Если код уже пришёл — введите его. Иначе нажмите «Отправить код повторно».', 'info');
-    } else {
-      showToast(error.message, 'error');
+    const data = await apiCheckEmail(email);
+    authState.email = email;
+    authState.status = data.status;
+
+    switch (data.status) {
+      case 'new':
+        showAuthStep('register');
+        break;
+      case 'has_password':
+        showAuthStep('login');
+        break;
+      case 'needs_password':
+        showAuthStep('register');
+        break;
+      default:
+        showAuthStep('register');
     }
+  } catch (error) {
+    showToast(error.message, 'error');
   } finally {
     showLoading(elements.sendCodeBtn, false);
   }
 });
 
-elements.codeForm.addEventListener('submit', async (e) => {
+// Step 2a: Login with password
+elements.loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = elements.emailDisplay.textContent;
-  const code = elements.codeInput.value.trim();
-  
-  if (!code) {
-    showToast('Введите код', 'error');
-    return;
-  }
-  
-  showLoading(elements.verifyCodeBtn, true);
-  
-  try {
-    await verifyCode(email, code);
-    const loaded = await loadUserData();
+  const password = elements.loginPassword.value;
+  if (!password) { showToast('Введите пароль', 'error'); return; }
 
+  showLoading(elements.loginBtn, true);
+  try {
+    await apiLogin(authState.email, password);
+    const loaded = await loadUserData();
     if (loaded && state.user && !state.user.consentAccepted) {
       setTimeout(() => openWelcomeModal(), 300);
-    } else if (loaded) {
-      setTimeout(() => loadPendingAdminPopup(), 350);
     }
   } catch (error) {
-    // Ошибка уже показана
+    showToast(error.message, 'error');
   } finally {
-    showLoading(elements.verifyCodeBtn, false);
+    showLoading(elements.loginBtn, false);
   }
 });
 
-elements.resendCodeBtn.addEventListener('click', async () => {
-  const email = elements.emailDisplay.textContent;
-  showLoading(elements.resendCodeBtn, true);
-  
+// Step 2b: Register / set password → sends magic link
+elements.registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const password = elements.registerPassword.value;
+  const confirm = elements.registerPasswordConfirm.value;
+
+  if (!password) { showToast('Введите пароль', 'error'); return; }
+  if (password.length < 6) { showToast('Пароль должен быть не менее 6 символов', 'error'); return; }
+  if (password !== confirm) { showToast('Пароли не совпадают', 'error'); return; }
+
+  showLoading(elements.registerBtn, true);
   try {
-    await sendCode(email);
-    showToast('Код отправлен повторно', 'success');
+    authState.registerPassword = password;
+    await apiRegister(authState.email, password);
+    showAuthStep('emailSent');
   } catch (error) {
-    // Ошибка уже показана
+    showToast(error.message, 'error');
   } finally {
-    showLoading(elements.resendCodeBtn, false);
+    showLoading(elements.registerBtn, false);
   }
 });
 
-elements.changeEmailBtn.addEventListener('click', () => {
-  elements.codeForm.classList.add('hidden');
-  elements.emailForm.classList.remove('hidden');
-  elements.emailInput.value = '';
+// Verify registration — handled via magic link (email)
+// This handler is no longer needed; replaced by emailSent flow
+
+// Quick login (trusted device)
+elements.quickLoginBtn.addEventListener('click', async () => {
+  showLoading(elements.quickLoginBtn, true);
+  try {
+    await apiTrustedLogin();
+    const loaded = await loadUserData();
+    if (loaded && state.user && !state.user.consentAccepted) {
+      setTimeout(() => openWelcomeModal(), 300);
+    }
+  } catch (error) {
+    clearDeviceCookie();
+    showAuthStep('email');
+    showToast(error.message, 'error');
+  } finally {
+    showLoading(elements.quickLoginBtn, false);
+  }
 });
+
+elements.quickLoginOtherBtn.addEventListener('click', () => {
+  clearDeviceCookie();
+  resetAuthForms();
+  showAuthStep('email');
+});
+
+// Forgot password — from email step
+elements.forgotPasswordBtn.addEventListener('click', () => {
+  showAuthStep('forgotPassword');
+  if (elements.forgotEmail) elements.forgotEmail.value = authState.email || '';
+});
+
+// Forgot password — from login step
+elements.loginForgotPasswordBtn.addEventListener('click', () => {
+  showAuthStep('forgotPassword');
+  if (elements.forgotEmail) elements.forgotEmail.value = authState.email || '';
+});
+
+// Forgot password form submit — sends reset link
+elements.forgotPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = elements.forgotEmail.value.trim();
+  if (!email) { showToast('Введите email', 'error'); return; }
+
+  showLoading(elements.forgotPasswordSubmitBtn, true);
+  try {
+    await apiRequestPasswordReset(email);
+    authState.email = email;
+    showAuthStep('resetLinkSent');
+    showToast('Ссылка для сброса пароля отправлена на email', 'success');
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    showLoading(elements.forgotPasswordSubmitBtn, false);
+  }
+});
+
+// Reset password — now handled via magic link (email)
+// User clicks link from email → reset-password.html page
+
+// Email sent — resend button
+if (elements.emailSentResendBtn) {
+  elements.emailSentResendBtn.addEventListener('click', async () => {
+    if (!authState.email) { showToast('Email не указан', 'error'); return; }
+    showLoading(elements.emailSentResendBtn, true);
+    try {
+      const resendType = elements.emailSentResendBtn.dataset.type || 'registration';
+      if (resendType === 'password_reset') {
+        await apiRequestPasswordReset(authState.email);
+      } else {
+        await apiResendRegistration(authState.email, authState.registerPassword || '');
+      }
+      showToast('Ссылка отправлена повторно', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    } finally {
+      showLoading(elements.emailSentResendBtn, false);
+    }
+  });
+}
+
+if (elements.emailSentBackBtn) {
+  elements.emailSentBackBtn.addEventListener('click', () => {
+    resetAuthForms();
+    showAuthStep('email');
+  });
+}
+
+// Email sent — resend button handled via emailSentResendBtn above
+
+// Back buttons
+elements.loginBackBtn.addEventListener('click', () => {
+  resetAuthForms();
+  showAuthStep('email');
+});
+
+elements.registerBackBtn.addEventListener('click', () => {
+  resetAuthForms();
+  showAuthStep('email');
+});
+
+elements.verifyBackBtn.addEventListener('click', () => {
+  resetAuthForms();
+  showAuthStep('email');
+});
+
+elements.forgotBackBtn.addEventListener('click', () => {
+  showAuthStep('email');
+});
+
+// Password visibility toggles
+document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+  });
+});
+
+function clearDeviceCookie() {
+  document.cookie = 'ed_device=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+}
 
 elements.logoutBtn.addEventListener('click', logout);
 
@@ -1797,10 +2068,17 @@ document.getElementById('payBtn').addEventListener('click', async () => {
           elements.popupBlockedModal.classList.add('active');
         } else {
           // Fallback для старых версий — заменяем paymentNote если modal недоступен
-          if (elements.paymentNote) {
-            elements.paymentNote.innerHTML = `Браузер заблокировал новую вкладку. <a href="${encodeURI(data.url)}" target="_blank" rel="noopener noreferrer">Нажмите здесь, чтобы открыть оплату</a>.`;
-            elements.paymentNote.style.color = '#efb84a';
-          }
+            if (elements.paymentNote) {
+              const a = document.createElement('a');
+              a.href = data.url;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.textContent = 'Нажмите здесь, чтобы открыть оплату';
+              elements.paymentNote.textContent = 'Браузер заблокировал новую вкладку. ';
+              elements.paymentNote.appendChild(a);
+              elements.paymentNote.append('.');
+              elements.paymentNote.style.color = '#efb84a';
+            }
           showToast('Открытие вкладки заблокировано браузером', 'info');
         }
       }
@@ -2089,9 +2367,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 async function logout({ skipRequest = false } = {}) {
   if (!skipRequest) {
-    try {
-      await apiRequest('/api/auth/logout', { method: 'POST' });
-    } catch (_) {}
+    try { await apiRequest('/api/auth/logout', { method: 'POST' }); } catch (_) {}
   }
   state.user = null;
   state.subscriptions = [];
@@ -2102,10 +2378,12 @@ async function logout({ skipRequest = false } = {}) {
   document.body.classList.add('auth-screen-open');
   window.scrollTo({ top: 0, behavior: 'auto' });
   
-  elements.emailForm.classList.remove('hidden');
-  elements.codeForm.classList.add('hidden');
-  elements.emailInput.value = '';
-  elements.codeInput.value = '';
+  resetAuthForms();
+
+  const isTrusted = await checkTrustedDevice();
+  if (!isTrusted) {
+    showAuthStep('email');
+  }
 }
 
 // =====================================
@@ -2113,7 +2391,27 @@ async function logout({ skipRequest = false } = {}) {
 // =====================================
 
 async function init() {
+  console.log('[EL-DUCK] init() started');
   captureReferralFromUrl();
+
+  // Handle magic link redirect parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const authVerified = urlParams.get('auth_verified');
+  const authError = urlParams.get('auth_error');
+
+  if (authError) {
+    const errorMessages = {
+      'Ссылка недействительна': 'Ссылка для подтверждения недействительна.',
+      'Ссылка устарела или недействительна': 'Ссылка для подтверждения устарела. Запросите новую.',
+      'Аккаунт уже подтверждён. Войдите по паролю.': 'Аккаунт уже подтверждён. Войдите, используя пароль.',
+    };
+    showToast(errorMessages[decodeURIComponent(authError)] || decodeURIComponent(authError), 'error');
+    window.history.replaceState({}, '', '/');
+  }
+
+  if (authVerified) {
+    window.history.replaceState({}, '', '/');
+  }
 
   const supportUuid = getSupportRouteUuid();
   const supportKey = getSupportKeyFromUrl();
@@ -2148,6 +2446,15 @@ async function init() {
     }
   } catch (error) {
     // Не авторизован — остаёмся на экране входа
+  }
+
+  if (!isAuthenticated) {
+    document.body.classList.add('auth-screen-open');
+    const isTrusted = await checkTrustedDevice();
+    console.log('[EL-DUCK] trusted device:', isTrusted);
+    if (!isTrusted) {
+      showAuthStep('email');
+    }
   }
 
   if (supportUuid) {

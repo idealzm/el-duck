@@ -543,12 +543,12 @@ function renderUsersTable(users) {
       }
     }
 
-    const shortId = user.id.length > 8 ? user.id.slice(0, 8) + '…' : user.id;
+    const shortId = user.id.length > 8 ? escapeHtml(user.id.slice(0, 8)) + '…' : escapeHtml(user.id);
     const isSelected = state.selectedUserIds.has(user.id);
-    const groupBadges = (user.groups || []).map(g => `<span class="user-group-badge" style="background:${g.color};color:#fff;" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>`).join(' ');
+    const groupBadges = (user.groups || []).map(g => `<span class="user-group-badge" style="background:${escapeHtml(g.color)};color:#fff;" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>`).join(' ');
 
     return `
-      <tr data-user-row="${escapeHtml(user.id)}" class="${isSelected ? 'user-row-selected' : ''}${(user.groups || []).length ? ' has-groups' : ''}" style="${(user.groups || []).length ? `--group-color:${user.groups[0].color}` : ''}">
+      <tr data-user-row="${escapeHtml(user.id)}" class="${isSelected ? 'user-row-selected' : ''}${(user.groups || []).length ? ' has-groups' : ''}" style="${(user.groups || []).length ? `--group-color:${escapeHtml(user.groups[0].color)}` : ''}">
         <td><input type="checkbox" data-user-checkbox="${escapeHtml(user.id)}" ${isSelected ? 'checked' : ''} aria-label="Выбрать пользователя ${escapeHtml(user.email)}" /></td>
         <td title="${escapeHtml(user.id)}">${shortId}</td>
         <td>${escapeHtml(user.email)}${groupBadges ? ' ' + groupBadges : ''}</td>
@@ -687,7 +687,7 @@ function renderPaymentsTable(payments) {
 
       return `
         <tr>
-          <td>${payment.id}</td>
+          <td>${escapeHtml(payment.id)}</td>
           <td>${escapeHtml(payment.email)}${actorLine}</td>
           <td>${formatBalance(payment.amount)} ₽${adminBadge}</td>
           <td><span class="status ${statusClass}">${escapeHtml(payment.status)}</span></td>
