@@ -125,7 +125,7 @@ app.get('/favicon.ico', (req, res) => {
   res.redirect('/assets/icons/favicon.ico?v=20260417-1');
 });
 
-// API маршруты
+// API маршруты ( ДО статических файлов и SPA — чтобы magic links обрабатывались)
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
@@ -133,6 +133,18 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Magic link verification — должен быть ДО static и SPA fallback
+app.get('/auth/verify-registration', (req, res) => {
+  const token = req.query.token;
+  if (token) {
+    return res.redirect(307, `/api/auth/verify-registration?token=${encodeURIComponent(token)}`);
+  }
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 // Публичные настройки
 app.get('/api/config', (req, res) => {
@@ -186,13 +198,6 @@ app.get('/profile', (req, res) => {
 });
 
 app.get('/support/:ticketUuid', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-app.get('/auth/verify-registration', (req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
