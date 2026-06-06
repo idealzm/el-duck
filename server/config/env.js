@@ -66,7 +66,7 @@ if (isProduction && adminPassword.length < 12) {
 
 const supportTokenEncryptionKey = process.env.SUPPORT_TOKEN_ENCRYPTION_KEY || '';
 if (isProduction && supportTokenEncryptionKey.length < 32) {
-  throw new Error('SUPPORT_TOKEN_ENCRYPTION_KEY must be set and at least 32 chars in production');
+  console.warn('[SECURITY] SUPPORT_TOKEN_ENCRYPTION_KEY not set — falling back to JWT_SECRET. Set a dedicated key for production.');
 }
 
 const adminEmail = (process.env.ADMIN_EMAIL || 'admin@el-duck.com').trim().toLowerCase();
