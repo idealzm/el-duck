@@ -1,10 +1,20 @@
 const axios = require('axios');
+const https = require('https');
 const config = require('../config/env');
 
 class PasarguardService {
   constructor() {
     this.token = null;
     this.tokenExpMs = 0;
+    this._httpsAgent = null;
+  }
+
+  getHttpsAgent() {
+    if (this._httpsAgent) return this._httpsAgent;
+    if (config.pasarguard?.skipTls) {
+      this._httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    }
+    return this._httpsAgent;
   }
 
   getBaseUrl() {
@@ -42,7 +52,8 @@ class PasarguardService {
 
     const response = await axios.post(`${baseUrl}/api/admin/token`, payload.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      timeout: 15000
+      timeout: 15000,
+      httpsAgent: this.getHttpsAgent()
     });
 
     const token = String(response?.data?.access_token || '').trim();
@@ -59,6 +70,7 @@ class PasarguardService {
   async request(method, path, { params, data, headers } = {}) {
     const { baseUrl } = this.ensureConfig();
     let token = await this.getAdminToken(false);
+    const httpsAgent = this.getHttpsAgent();
 
     const send = async () => axios({
       method,
@@ -69,7 +81,8 @@ class PasarguardService {
       headers: {
         Authorization: `Bearer ${token}`,
         ...headers
-      }
+      },
+      ...(httpsAgent ? { httpsAgent } : {})
     });
 
     try {

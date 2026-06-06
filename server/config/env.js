@@ -97,7 +97,8 @@ module.exports = {
   pasarguard: {
     baseUrl: process.env.PASARGUARD_BASE_URL || 'https://el-duck.com:8000',
     adminUsername: process.env.PASARGUARD_ADMIN_USERNAME || '',
-    adminPassword: process.env.PASARGUARD_ADMIN_PASSWORD || ''
+    adminPassword: process.env.PASARGUARD_ADMIN_PASSWORD || '',
+    skipTls: toBool(process.env.PASARGUARD_SKIP_TLS, false)
   },
   
   // Безопасность
