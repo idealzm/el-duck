@@ -894,7 +894,7 @@ async function showConfig(title, type, id, protocolKey = '') {
             <button class="btn-action btn-toggle-qr" data-qr-target="vpn-qr-container">Показать QR</button>
           </div>
           <div id="vpn-qr-container" class="vpn-qr-container" hidden>
-            <img src="${escapeHtml(getQrImageUrl(subscriptionLink))}" alt="VPN QR" />
+            <img id="vpn-qr-img" alt="VPN QR" />
           </div>
           <div class="instruction-block">
             <div class="server-routing-note">
@@ -910,6 +910,10 @@ async function showConfig(title, type, id, protocolKey = '') {
     }
 
     elements.configContent.innerHTML = warningHtml + content;
+    if (subscriptionLink) {
+      const qrImg = document.getElementById('vpn-qr-img');
+      if (qrImg) qrImg.src = generateQrDataUrl(subscriptionLink);
+    }
     elements.configModal.classList.add('active');
   } catch (error) {
     showToast(error.message, 'error');
@@ -1078,8 +1082,15 @@ function safeCode(code) {
   return `<code>${escapeHtml(code)}</code>`;
 }
 
-function getQrImageUrl(text) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(String(text || ''))}`;
+function generateQrDataUrl(text) {
+  try {
+    const canvas = document.createElement('canvas');
+    QRCode.toCanvas(canvas, String(text || ''), { width: 220, margin: 2 });
+    return canvas.toDataURL('image/png');
+  } catch (err) {
+    console.error('QR generation failed:', err);
+    return '';
+  }
 }
 
 // Действия в модальном окне конфигурации (делегирование событий)

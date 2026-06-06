@@ -67,7 +67,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https://api.qrserver.com'],
+      imgSrc: ["'self'", 'data:'],
       connectSrc: ["'self'", 'wss:', 'ws:'],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
