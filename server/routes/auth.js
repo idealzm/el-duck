@@ -294,11 +294,14 @@ router.post('/register', registerLimiter, validateRegister, async (req, res) => 
 router.get('/verify-registration', magicLinkVerifyLimiter, (req, res) => {
   try {
     const rawToken = String(req.query.token || '').trim();
+    console.log(`[Auth] verify-registration called, token length: ${rawToken.length}`);
     if (!rawToken) {
+      console.log(`[Auth] verify-registration: empty token`);
       return res.redirect('/?auth_error=' + encodeURIComponent('Ссылка недействительна'));
     }
 
     const linkData = MagicLink.verify(rawToken);
+    console.log(`[Auth] verify-registration: linkData=${!!linkData}, type=${linkData?.type}, hasPayload=${!!linkData?.payload}, hasPasswordHash=${!!linkData?.payload?.passwordHash}`);
     if (!linkData || linkData.type !== 'registration') {
       return res.redirect('/?auth_error=' + encodeURIComponent('Ссылка устарела или недействительна'));
     }
@@ -306,19 +309,22 @@ router.get('/verify-registration', magicLinkVerifyLimiter, (req, res) => {
     const email = linkData.email;
 
     let user = User.getByEmail(email);
+    console.log(`[Auth] verify-registration: email=${email}, userExists=${!!user}, userId=${user?.id}`);
     if (user && UserPassword.exists(user.id)) {
+      console.log(`[Auth] verify-registration: already has password, redirecting to login`);
       return res.redirect('/?auth_error=' + encodeURIComponent('Аккаунт уже подтверждён. Войдите по паролю.'));
     }
 
     if (!user) {
       user = User.create(email);
+      console.log(`[Auth] verify-registration: created new user ${user.id}`);
     }
 
     if (!UserPassword.exists(user.id) && linkData.payload?.passwordHash) {
       UserPassword.setHash(user.id, linkData.payload.passwordHash);
-      console.log(`[Auth] Password set for user ${user.id} (${email}) via magic link verify`);
+      console.log(`[Auth] Password set for user ${user.id} (${email}) via magic link verify, verify check: ${UserPassword.exists(user.id)}`);
     } else {
-      console.log(`[Auth] Verify-registration: user ${user.id} (${email}), passwordExists=${UserPassword.exists(user.id)}, hasPayloadHash=${!!linkData.payload?.passwordHash}`);
+      console.log(`[Auth] Verify-registration SKIPPED setting password: user ${user.id} (${email}), passwordExists=${UserPassword.exists(user.id)}, hasPayloadHash=${!!linkData?.payload?.passwordHash}`);
     }
 
     const result = issueSessionAndSetCookies(req, res, user);
