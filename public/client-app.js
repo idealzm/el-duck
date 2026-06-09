@@ -1207,13 +1207,17 @@ async function openSupportChat(ticketUuid, key = '') {
     renderSupportTicket();
     renderSupportMessages();
     connectSupportSocket(ticketUuid, accessKey);
-  } catch (error) {
+    return true;
+   } catch (error) {
     showToast(error.message, 'error');
+    setSupportChatOnlyMode(false);
     if (!state.user) {
       elements.mainScreen.classList.remove('active');
       elements.authScreen.classList.add('active');
       document.body.classList.add('auth-screen-open');
+      window.history.replaceState({}, '', '/');
     }
+    return false;
   }
 }
 
@@ -2460,8 +2464,8 @@ async function init() {
   }
 
   if (supportUuid) {
-    await openSupportChat(supportUuid, supportKey);
-    return;
+    const chatOpened = await openSupportChat(supportUuid, supportKey);
+    if (chatOpened) return;
   }
 
   if (!isAuthenticated) {
@@ -2481,8 +2485,10 @@ async function init() {
 window.addEventListener('popstate', () => {
   const path = window.location.pathname;
   if (path === '/vpn') {
+    setSupportChatOnlyMode(false);
     navigateToSection('vpn');
   } else if (path === '/profile') {
+    setSupportChatOnlyMode(false);
     navigateToSection('profile');
   } else if (/^\/support\//.test(path)) {
     const uuid = getSupportRouteUuid();
@@ -2491,8 +2497,10 @@ window.addEventListener('popstate', () => {
       openSupportChat(uuid, storedKey);
       return;
     }
+    setSupportChatOnlyMode(false);
     navigateToSection('vpn');
   } else {
+    setSupportChatOnlyMode(false);
     navigateToSection('vpn');
   }
 });

@@ -65,6 +65,19 @@ body.support-chat-only #profile-section {
 
 body.support-chat-only #support-section {
     display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+body.support-chat-only #authScreen {
+    display: none !important;
+}
+
+body.support-chat-only #mainScreen {
+    display: flex !important;
+    flex-direction: column;
+    height: 100dvh;
 }
 
 #support-section {
@@ -707,7 +720,7 @@ body.support-chat-only .main {
     padding: 0 !important;
     min-height: 0;
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
 }
 
 body.support-chat-only #support-section.active {
@@ -716,7 +729,7 @@ body.support-chat-only #support-section.active {
     margin: 0;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 body.support-chat-only .support-chat-page {
