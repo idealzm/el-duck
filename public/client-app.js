@@ -1,7 +1,7 @@
 // EL-DUCK VPN Client App
 // =====================================
 
-console.log('[EL-DUCK] client-app.js loaded, version 20260609-3');
+console.log('[EL-DUCK] client-app.js loaded, version 20260609-4');
 
 const API_URL = '';
 
@@ -1199,6 +1199,7 @@ async function openSupportChat(ticketUuid, key = '') {
     }
 
     const chatOnly = !state.user;
+    console.log('[EL-DUCK] openSupportChat success, chatOnly:', chatOnly, 'user:', !!state.user);
     setSupportChatOnlyMode(chatOnly);
     if (elements.supportBackBtn) {
       elements.supportBackBtn.textContent = chatOnly ? '← Вернуться ко входу' : 'Назад';
@@ -1209,11 +1210,13 @@ async function openSupportChat(ticketUuid, key = '') {
     elements.mainScreen.style.display = '';
     document.body.classList.remove('auth-screen-open');
     navigateToSection('support');
+    console.log('[EL-DUCK] chat UI rendered, supportMessages:', state.support.messages.length, 'ticket:', !!state.support.ticket);
     renderSupportTicket();
     renderSupportMessages();
     connectSupportSocket(ticketUuid, accessKey);
     return true;
    } catch (error) {
+    console.error('[EL-DUCK] openSupportChat error:', error.message);
     showToast(error.message, 'error');
     setSupportChatOnlyMode(false);
     if (!state.user) {
