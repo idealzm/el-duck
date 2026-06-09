@@ -1,7 +1,7 @@
 // EL-DUCK VPN Client App
 // =====================================
 
-console.log('[EL-DUCK] client-app.js loaded, version 20260606-2');
+console.log('[EL-DUCK] client-app.js loaded, version 20260609-3');
 
 const API_URL = '';
 
