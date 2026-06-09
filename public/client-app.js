@@ -501,6 +501,9 @@ async function loadUserData() {
 function updateUI() {
   if (!state.user) return;
   document.body.classList.remove('support-chat-only');
+  setSupportChatOnlyMode(false);
+  elements.authScreen.style.display = '';
+  elements.mainScreen.style.display = '';
 
   // Обновляем профиль
   elements.profileName.textContent = state.user.email.split('@')[0];
@@ -1201,7 +1204,9 @@ async function openSupportChat(ticketUuid, key = '') {
       elements.supportBackBtn.textContent = chatOnly ? '← Вернуться ко входу' : 'Назад';
     }
     elements.authScreen.classList.remove('active');
+    elements.authScreen.style.display = 'none';
     elements.mainScreen.classList.add('active');
+    elements.mainScreen.style.display = '';
     document.body.classList.remove('auth-screen-open');
     navigateToSection('support');
     renderSupportTicket();
@@ -1214,6 +1219,7 @@ async function openSupportChat(ticketUuid, key = '') {
     if (!state.user) {
       elements.mainScreen.classList.remove('active');
       elements.authScreen.classList.add('active');
+      elements.authScreen.style.display = '';
       document.body.classList.add('auth-screen-open');
       window.history.replaceState({}, '', '/');
     }
@@ -2209,9 +2215,10 @@ if (elements.supportBackBtn) {
       navigateToSection('profile');
     } else {
       if (state.support.socket) state.support.socket.disconnect();
+      setSupportChatOnlyMode(false);
       elements.mainScreen.classList.remove('active');
       elements.authScreen.classList.add('active');
-      setSupportChatOnlyMode(false);
+      elements.authScreen.style.display = '';
       document.body.classList.add('auth-screen-open');
       window.history.pushState({}, '', '/');
     }

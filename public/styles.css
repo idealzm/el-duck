@@ -80,6 +80,12 @@ body.support-chat-only #mainScreen {
     height: 100dvh;
 }
 
+body.support-chat-only .screen.active {
+    display: flex !important;
+    flex-direction: column;
+    height: 100dvh;
+}
+
 #support-section {
     display: none;
 }
